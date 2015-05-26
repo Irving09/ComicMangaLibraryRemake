@@ -1,0 +1,8 @@
+{
+    "connectionLimit" : 100,
+    "debug" : false,
+    "host" : "process.env.CLEARDB_DATABASE_URL",
+	"user" : "process.env.CLEARDB_USERNAME",
+	"password" : "process.env.CLEARDB_PASSWORD",
+	"database" : "process.env.CLEARDB_DATABASE"
+}

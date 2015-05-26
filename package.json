@@ -1,0 +1,19 @@
+{
+  "name": "libraryremake",
+  "version": "1.0.0",
+  "description": "ComicMangaLibraryRemake remake",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Irving09/ComicMangaLibraryRemake.git"
+  },
+  "author": "Inno pot pot",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Irving09/ComicMangaLibraryRemake/issues"
+  },
+  "homepage": "https://github.com/Irving09/ComicMangaLibraryRemake#readme"
+}
