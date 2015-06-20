@@ -1,3 +1,5 @@
+'use strict';
+
 var _u 		= require('lodash');
 var	mysql 	= require('mysql');
 var config	= require('./dbConfig');
@@ -52,34 +54,6 @@ exports.getUserByUsernameAndEmail = function(username, email, callback) {
 	});
 }
 
-exports.postUser = function(requestPostBody, callback) {
-	exports.getPool().getConnection(function(connectionError, connection) {
-		if (connectionError) {
-			connection.release();
-			return callback(connectionError, null);
-		}
-
-		// TODO
-		connection.query('select Username, Email from userinfo', function(queryError, dbResult) {
-			if (queryError) {
-				connection.release();
-				return callback(queryError, null);
-			}
-
-			var searchUser = _u.find(dbResult, function(row) {
-                return row.username == username || row.Email == email;
-            });
-			
-			if (searchUser != null) {
-				connection.release();
-				return callback(new Error('Duplicate User'), null);
-			}
-		});
-	});
-};
-
-
-
 exports.postUserIntoUserInfo = function(requestPostBody, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
 		if (connectionError) {
@@ -88,105 +62,42 @@ exports.postUserIntoUserInfo = function(requestPostBody, callback) {
 		}
 
 		connection.query('insert into userinfo set ?', requestPostBody, function(err, dbResult, fields) {
+			connection.release();
             if (err) {
-            	connection.release();
                 return callback(err, null);
             }
-            // 	var useraccountPost = { 
-            // 		Username : userName, 
-            // 		Pw : userPassword,
-            // 		UserNo : dbResult.insertId
-            // 	}
-            // 	connection.query('insert into useraccount set ?', useraccountPost, function(err, dbResult, fields) {
-	           //  	connection.release();
-	           //  	if (err) {
-	           //  		return callback(err, null);
-	           //  	} else {
-	           //  		return callback(null, useraccountPost);
-	           //  	}
-            // 	});
+
+            var userAccountPost = {
+            	Username : requestPostBody.userName,
+            	Pw : requestPostBody.userPassword,
+            	UserNo : dbResult.insertId
+            };
+
+            return callback(null, userAccountPost);
         });
-
-// 		var selectPromise = Q.fcall(function() {
-// 			connection.query('select Username, Email from userinfo', function(dbSelectError, dbSelectResult) {
-// 				if (dbSelectError) {
-// 					connection.release();
-// 				}
-// 			});
-// 		});
-
-
-
-// 		connection.query('select Username, Email from userinfo', function(queryError, dbResult) {
-// 			if (queryError) {
-// 				connection.release();
-// 				return callback(queryError, null);
-// 			}
-
-// 			var searchUser = _u.find(dbResult, function(row) {
-//                 return row.username == username || row.Email == email;
-//             });
-			
-// 			if (searchUser != null) {
-// 				connection.release();
-// 				return callback(new Error('Duplicate User'), null);
-// 			}
-// 		});
 	});
 };
+// useraccountPost = { Username : post.Username, Pw : post.Password };
+// useraccountPost.UserNo = dbResult.insertId;
+exports.postUserIntoUserAccount = function(requestPostBody, callback) {
+	exports.getPool().getConnection(function(connectionError, connection) {
+		if (connectionError) {
+			connection.release();
+			return callback(connectionError, null);
+		}
 
-/*
+		connection.query('insert into useraccount set ?', requestPostBody, function(err, dbResult, fields) {
+			connection.release();
+			//{"fieldCount":0,"affectedRows":1,"insertId":182,"serverStatus":2,"warningCount":0,"message":"","protocol41":true,"changedRows":0}
 
-function _registerAndValidateUser(post, callback) {
-	var username = post.Username,
-		email = post.Email,
-		userPassword = post.Password,
-		userName = post.Username;
-	delete post['Password'];
+            if (err) {
+                return callback(err, null);
+            }
 
-	pool.getConnection(function(err, connection) {
-        if (err) {
-            connection.release();
-            return callback(err, null);
-        }
-	    connection.query('select Username, Email from userinfo', function(err, dbResult) {
-	        if (err) {
-	            return callback(err, null);
-	        } else {
-	            var searchUser = _und.find(dbResult, function(row) {
-	                return row.username == username || row.Email == email;
-	            });
-	            console.log('searchUser: ' + JSON.stringify(searchUser));
-	            if (searchUser != null) {
-	            	console.log('it is really in here');
-	            	return callback(new Error('Duplicated User'), null);
-	            }
-
-	            connection.query('insert into userinfo set ?', post, function(err, dbResult, fields) {
-	                if (err) {
-	                    return callback(err, null);
-	                } else {
-	                	var useraccountPost = { 
-	                		Username : userName, 
-	                		Pw : userPassword,
-	                		UserNo : dbResult.insertId
-	                	}
-	                	connection.query('insert into useraccount set ?', useraccountPost, function(err, dbResult, fields) {
-			            	connection.release();
-			            	if (err) {
-			            		return callback(err, null);
-			            	} else {
-			            		return callback(null, useraccountPost);
-			            	}
-		            	});
-	                }
-	            });
-	        }
+            return callback(null, requestPostBody);
 	    });
 	});
-}
-
-*/
+};
 
 /*
 module.exports = {
