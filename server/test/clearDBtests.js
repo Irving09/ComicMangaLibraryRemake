@@ -35,7 +35,6 @@ describe('getUser', function() {
 	it('should fail to connect to the pool - connection error', sinon.test(function() {
 		// Arrange
 		poolConnectionError = 'Pool Connection Error';
-		connectionObject.query = sandbox.stub().callsArgWith(1, dbQueryError, queryResult);
 		
 		// act
 		unitUnderTest.getUser('username', 'password', function(error, result) {
@@ -91,3 +90,93 @@ describe('getUser', function() {
 		assert.ok(assertionTests, 'Tests inside callback did not get run');
 	}));
 });
+
+describe('postUser', function() {
+	var assertionTests 		= false,
+		connectionObject 	= null,
+		poolConnectionError = null,
+		dbQueryError 		= null,
+		queryResult 		= null,
+		sandbox 			= sinon.sandbox.create(),
+		fakePool;
+
+	beforeEach(function() {
+		connectionObject = {
+			release : sandbox.stub(),
+		};
+
+		fakePool = {
+			getConnection : function(connectionCallback) {
+				connectionCallback(poolConnectionError, connectionObject);
+			}
+		};
+
+		sandbox.stub(unitUnderTest, 'getPool').returns(fakePool);
+	});
+
+	afterEach(function() {
+		sandbox.restore();
+		assertionTests = false;
+	});
+
+	it('should fail to connect to the pool - connection error', sinon.test(function() {
+		// Arrange
+		poolConnectionError = 'Pool Connection Error';
+		
+		// act
+		unitUnderTest.postUser({}, function(error, result) {
+			assert.ok(unitUnderTest.getPool.calledOnce);
+			assert.ok(error === poolConnectionError);
+			assert.ok(connectionObject.release.calledOnce);
+			assert.ok(null === result);
+			assertionTests = true;
+		});
+
+		// assert
+		assert.ok(assertionTests, 'Tests inside callback did not get run');
+	}));
+
+	it('should fail to query - query error', sinon.test(function() {
+		// Arrange
+		poolConnectionError = null;
+		dbQueryError = 'DB Query Error';
+		queryResult = null;
+		connectionObject.query = sandbox.stub().callsArgWith(1, dbQueryError, queryResult);
+
+		// Act
+		unitUnderTest.postUser({}, function(error, result) {
+			assert.ok(unitUnderTest.getPool.calledOnce, 'getPool was not called once');	
+			assert.ok(error === dbQueryError);
+			assert.ok(connectionObject.release.calledOnce);
+			assert.ok(null === result);
+			assertionTests = true;
+		});
+
+		// assert
+		assert.ok(assertionTests, 'Tests inside callback did not get run');
+	}));
+
+	// it('should be able to call back with the expected result', sinon.test(function() {
+
+	// }));
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
