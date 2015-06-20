@@ -38,9 +38,21 @@ exports.postUser = function(requestPostBody, callback) {
 		}
 
 		// TODO
-		console.log('=================');
-		console.log('IN HERE');
-		console.log('=================');
+		connection.query('select Username, Email from userinfo', function(queryError, dbResult) {
+			if (queryError) {
+				connection.release();
+				return callback(queryError, null);
+			}
+
+			var searchUser = _u.find(dbResult, function(row) {
+                return row.username == username || row.Email == email;
+            });
+			
+			if (searchUser != null) {
+				connection.release();
+				return callback(new Error('Duplicate User'), null);
+			}
+		});
 	});
 };
 
