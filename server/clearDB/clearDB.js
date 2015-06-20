@@ -10,24 +10,23 @@ exports.getPool = function() {
 
 exports.getUser = function(username, password, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
+
 		if (connectionError) {
 			connection.release();
 			return callback(connectionError, null);
 		}
 
-		// connection.query('select username, pw from useraccount', function(queryError, dbResult) {
-		// 	console.log('queryError:', queryError);
-		// 	console.log('dbResult:', dbResult);
-	 //        connection.release();
-	 //        if (err) {
-	 //            return err;
-	 //        } else {
-	 //            var result = _und.find(dbResult, function(row) {
-	 //                return row.username == username && row.pw == password;
-	 //            });
-  //               callback(null, result);
-	 //        }
-	    // });
+		connection.query('select username, pw from useraccount', function(queryError, dbResult) {
+	        connection.release();
+	        if (queryError) {
+	            return callback(queryError, null);
+	        } else {
+	            var result = _u.find(dbResult, function(row) {
+	                return row.username == username && row.pw == password;
+	            });
+                return callback(null, result);
+	        }
+	    });
 	});
 };
 
