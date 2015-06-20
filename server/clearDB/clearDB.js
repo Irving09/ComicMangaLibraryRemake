@@ -1,6 +1,7 @@
 var _u 		= require('lodash');
 var	mysql 	= require('mysql');
 var config	= require('./dbConfig');
+var Q 		= require('q');
 
 var _pool   = mysql.createPool(config);
 
@@ -8,7 +9,7 @@ exports.getPool = function() {
 	return _pool;
 };
 
-exports.getUser = function(username, password, callback) {
+exports.getUserByUsernameAndPassword = function(username, password, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
 
 		if (connectionError) {
@@ -20,15 +21,36 @@ exports.getUser = function(username, password, callback) {
 	        connection.release();
 	        if (queryError) {
 	            return callback(queryError, null);
-	        } else {
-	            var result = _u.find(dbResult, function(row) {
-	                return row.username == username && row.pw == password;
-	            });
-                return callback(null, result);
 	        }
+            var result = _u.find(dbResult, function(row) {
+                return row.username == username && row.pw == password;
+            });
+            return callback(null, result);
 	    });
 	});
 };
+
+exports.getUserByUsernameAndEmail = function(username, email, callback) {
+	exports.getPool().getConnection(function(connectionError, connection) {
+		if (connectionError) {
+			connection.release();
+			return callback(connectionError, null);
+		}
+
+		connection.query('select Username, Email from userinfo', function(dbSelectError, dbSelectResult) {
+			connection.release();
+			if (dbSelectError) {
+				return callback(dbSelectError, null);
+			}
+
+			var searchUser = _u.find(dbSelectResult, function(row) {
+                return row.username == username || row.Email == email;
+            });
+			
+			return callback(null, searchUser);
+		});
+	});
+}
 
 exports.postUser = function(requestPostBody, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
@@ -53,6 +75,63 @@ exports.postUser = function(requestPostBody, callback) {
 				return callback(new Error('Duplicate User'), null);
 			}
 		});
+	});
+};
+
+
+
+exports.postUserIntoUserInfo = function(requestPostBody, callback) {
+	exports.getPool().getConnection(function(connectionError, connection) {
+		if (connectionError) {
+			connection.release();
+			return callback(connectionError, null);
+		}
+
+		connection.query('insert into userinfo set ?', requestPostBody, function(err, dbResult, fields) {
+            if (err) {
+            	connection.release();
+                return callback(err, null);
+            }
+            // 	var useraccountPost = { 
+            // 		Username : userName, 
+            // 		Pw : userPassword,
+            // 		UserNo : dbResult.insertId
+            // 	}
+            // 	connection.query('insert into useraccount set ?', useraccountPost, function(err, dbResult, fields) {
+	           //  	connection.release();
+	           //  	if (err) {
+	           //  		return callback(err, null);
+	           //  	} else {
+	           //  		return callback(null, useraccountPost);
+	           //  	}
+            // 	});
+        });
+
+// 		var selectPromise = Q.fcall(function() {
+// 			connection.query('select Username, Email from userinfo', function(dbSelectError, dbSelectResult) {
+// 				if (dbSelectError) {
+// 					connection.release();
+// 				}
+// 			});
+// 		});
+
+
+
+// 		connection.query('select Username, Email from userinfo', function(queryError, dbResult) {
+// 			if (queryError) {
+// 				connection.release();
+// 				return callback(queryError, null);
+// 			}
+
+// 			var searchUser = _u.find(dbResult, function(row) {
+//                 return row.username == username || row.Email == email;
+//             });
+			
+// 			if (searchUser != null) {
+// 				connection.release();
+// 				return callback(new Error('Duplicate User'), null);
+// 			}
+// 		});
 	});
 };
 
