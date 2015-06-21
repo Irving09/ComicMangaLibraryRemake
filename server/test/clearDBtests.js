@@ -8,13 +8,13 @@ var unitUnderTest   = require('../clearDB/clearDB.js');
 
 // *********** start getUserByUsernameAndPassword tests *********** //
 describe('getUserByUsernameAndPassword', function() {
-    var fakePool,
-        assertionTests = false,
-        connectionObject = null,
-        poolConnectionError = null,
-        dbQueryError = null,
-        dbQueryResult = null,
-        sandbox = sinon.sandbox.create();
+    var poolConnectionError = null,
+        assertionTests      = false,
+        connectionObject    = null,
+        dbQueryError        = null,
+        dbQueryResult       = null,
+        sandbox             = sinon.sandbox.create(),
+        fakePool;
 
     beforeEach(function() {
         connectionObject = {
@@ -97,13 +97,13 @@ describe('getUserByUsernameAndPassword', function() {
 
 // *********** start getUserByUsernameAndEmail tests *********** //
 describe('getUserByUsernameAndEmail', function() {
-    var fakePool,
-        assertionTests = false,
-        connectionObject = null,
+    var assertionTests      = false,
+        connectionObject    = null,
         poolConnectionError = null,
-        dbQueryError = null,
-        dbQueryResult = null,
-        sandbox = sinon.sandbox.create();
+        dbQueryError        = null,
+        dbQueryResult       = null,
+        sandbox             = sinon.sandbox.create(),
+        fakePool;
 
     beforeEach(function() {
         connectionObject = {
@@ -390,5 +390,60 @@ describe('postUserIntoUserAccount', function() {
         // Assert
         assert.ok(assertionTests, 'Tests inside callback did not get run');
     }));
+});
+// *********** end postUserIntoUserAccount tests *********** //
+
+// *********** start postUserIntoUserAccount tests *********** //
+describe('registerUser', function() {
+    var assertionTests      = false,
+        connectionObject    = null,
+        poolConnectionError = null,
+        dbSelectError       = null,
+        dbSelectResult      = null,
+        dbInsertUserInfoErr = null,
+        dbInsertUserInfoRes = null,
+        dbInsertUserAccErr  = null,
+        dbInsertUserAccRes  = null,
+        dbPostInput         = null,
+        sandbox             = sinon.sandbox.create(),
+        fakePool;
+
+    beforeEach(function() {
+        connectionObject = {
+            release : sandbox.stub(),
+        };
+
+        fakePool = {
+            getConnection : function(connectionCallback) {
+                connectionCallback(poolConnectionError, connectionObject);
+            }
+        };
+
+        sandbox.stub(unitUnderTest, 'getPool').returns(fakePool);
+    });
+
+    afterEach(function() {
+        sandbox.restore();
+        assertionTests = false;
+    });
+
+    it('should fail to connect to the pool - connection error', sinon.test(function() {
+        // Arrange
+        poolConnectionError = 'Pool Connection Error';
+        
+        // act
+        unitUnderTest.registerUser({}, sinon.test(function(error, result) {
+            assert.ok(unitUnderTest.getPool.calledOnce, 'exports.getPool was not invoked');
+            assert.ok(connectionObject.release.calledOnce, 'connection.release was not invoked');
+            assert.ok(error === poolConnectionError);
+            assert.ok(null === result);
+            assertionTests = true;
+        }));
+
+        // assert
+        assert.ok(assertionTests, 'Tests inside callback did not get run');
+    }));
+
+    
 });
 // *********** end postUserIntoUserAccount tests *********** //
