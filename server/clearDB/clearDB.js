@@ -77,23 +77,19 @@ exports.postUserIntoUserInfo = function(requestPostBody, callback) {
         });
 	});
 };
-// useraccountPost = { Username : post.Username, Pw : post.Password };
-// useraccountPost.UserNo = dbResult.insertId;
+
 exports.postUserIntoUserAccount = function(requestPostBody, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
 		if (connectionError) {
 			connection.release();
 			return callback(connectionError, null);
 		}
-
+		//{"fieldCount":0,"affectedRows":1,"insertId":182,"serverStatus":2,"warningCount":0,"message":"","protocol41":true,"changedRows":0}
 		connection.query('insert into useraccount set ?', requestPostBody, function(err, dbResult, fields) {
 			connection.release();
-			//{"fieldCount":0,"affectedRows":1,"insertId":182,"serverStatus":2,"warningCount":0,"message":"","protocol41":true,"changedRows":0}
-
             if (err) {
                 return callback(err, null);
             }
-
             return callback(null, requestPostBody);
 	    });
 	});
@@ -156,12 +152,29 @@ exports.registerUser = function(post, callback) {
 	var email 		= post.Email;
 	var password 	= post.Password;
 
-	exports.getPool().getConnection(function(connectionError, connection) {
-		if (connectionError) {
-			connection.release();
-			return callback(connectionError, null);
+	// Perform post logic here using promises
+	var deferred = Q.defer();
+	exports.getUserByUsernameAndEmail(username, email, function(err, result) {
+		if (err) {
+			return deferred.reject(err);
 		}
-		// Perform post logic here using promises
+		return deferred.resolve(result);
+	});
+
+	return callback(deferred.promise);
+		/*
+		Q.fcall(promisedStep1)
+		.then(promisedStep2)
+		.then(promisedStep3)
+		.then(promisedStep4)
+		.then(function (value4) {
+		    // Do something with value4 
+		})
+		.catch(function (error) {
+		    // Handle any error from all above steps 
+		})
+		.done();
+		*/
 
     // exports.getUserByUsernameAndEmail(username, email, function(userExists, result) {
 	// 	if (userExists) {
@@ -179,7 +192,6 @@ exports.registerUser = function(post, callback) {
 	// 	});
 	// });
 
-	});
 
 	// useraccountPost = { Username : post.Username, Pw : post.Password };
 };

@@ -3,7 +3,7 @@
 var assert          = require('assert');
 var sinon           = require('sinon');
 var mysql           = require('mysql');
-var _u          = require('lodash');
+var _u              = require('lodash');
 var unitUnderTest   = require('../clearDB/clearDB.js');
 
 // *********** start getUserByUsernameAndPassword tests *********** //
@@ -427,23 +427,108 @@ describe('registerUser', function() {
         assertionTests = false;
     });
 
-    it('should fail to connect to the pool - connection error', sinon.test(function() {
+    it('should fail to get first promise - getUserByUserNameAndEmail reject', sinon.test(function(done) {
         // Arrange
-        poolConnectionError = 'Pool Connection Error';
-        
-        // act
-        unitUnderTest.registerUser({}, sinon.test(function(error, result) {
-            assert.ok(unitUnderTest.getPool.calledOnce, 'exports.getPool was not invoked');
-            assert.ok(connectionObject.release.calledOnce, 'connection.release was not invoked');
-            assert.ok(error === poolConnectionError);
-            assert.ok(null === result);
-            assertionTests = true;
-        }));
+        dbSelectError = 'Rejected Promise';
+        dbSelectResult = null;
 
-        // assert
-        assert.ok(assertionTests, 'Tests inside callback did not get run');
+        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
+
+        // Act
+        unitUnderTest.registerUser({
+            Username : 'test1',
+            Email : 'test2',
+            Password : 'test3'
+        }, function(promise) { //All promises should be propagated in the promise callback regardless if its rejected or not
+            // Assert
+            promise.then(function(fulfilledValue) {/*Not invoked*/}, function(rejectedReason) {
+                assert.ok(dbSelectError === rejectedReason);
+            }).done(function() {
+                // Assert
+                assertionTests = true;
+                assert.ok(assertionTests, 'Tests inside callback did not get run');
+                done();
+            });
+        });
     }));
 
-    
+    it('should fail to get second promise - postUserIntoUserInfo reject', sinon.test(function(done) {
+        // Arrange
+        // dbSelectError           = null;
+        // dbSelectResult          = 'Fulfilled Select Result';
+        // dbInsertUserInfoErr     = 'Rejected dbPostError';
+        // dbInsertUserInfoRes     = null;
+
+        // sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
+        // sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
+
+        // // Act
+        // unitUnderTest.registerUser({
+        //     Username : 'test1',
+        //     Email : 'test2',
+        //     Password : 'test3'
+        // }, function(err, promise) {
+        //     // Assert
+        //     assert.ok(err === null, 'All promises should be propagated in the promise callback regardless if its rejected or not.');
+        //     promise.then(function(fulfilledValue) {/*Not invoked*/}, function(rejectedReason) {
+        //         assert.ok(rejectedReason === dbSelectError);
+        //         assertionTests = true;
+        //     });
+        // });
+
+        // // Assert
+        // assert.ok(assertionTests, 'Tests inside callback did not get run');
+        // Arrange
+        dbSelectError = null;
+        dbSelectResult = 'Fulfilled dbSelectResult';
+        dbInsertUserInfoErr = 'Rejected dbInsertUserInfo';
+        dbInsertUserInfoRes = null;
+
+        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
+        sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
+
+        // Act
+        unitUnderTest.registerUser({
+            Username : 'test1',
+            Email : 'test2',
+            Password : 'test3'
+        }, function(promise) {
+            // Assert
+            promise.then(function(fulfilledValue) {
+                assert.ok(dbSelectResult === fulfilledValue);
+            }, function(rejectedReason) {/* Not invoked */}).then(function(fulfilledValue) {/* Not invoked */}, function(rejectedReason) {
+                assert.ok(rejectedReason === dbInsertUserInfoErr);
+            }).done(function() {
+                // Assert
+                assertionTests = true;
+                assert.ok(assertionTests, 'Tests inside callback did not get run');
+                done();
+            });
+        });
+    }));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 });
 // *********** end postUserIntoUserAccount tests *********** //
