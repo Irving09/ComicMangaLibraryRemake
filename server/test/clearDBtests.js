@@ -494,7 +494,7 @@ describe('registerUser', function() {
             Password : 'test3'
         }, function(promise) {
             // Assert
-            promise.then(function(fulfilledValue) {
+            promise.then(function(fulfilledValue) {  //ljk
                 assert.ok(dbSelectResult === fulfilledValue);
             }, function(rejectedReason) {/* Not invoked */}).then(function(fulfilledValue) {/* Not invoked */}, function(rejectedReason) {
                 assert.ok(rejectedReason === dbInsertUserInfoErr);
