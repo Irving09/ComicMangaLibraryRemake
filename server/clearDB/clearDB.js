@@ -147,14 +147,7 @@ function _registerAndValidateUser(post, callback) {
 }
 */
 
-exports.
-
-exports.registerUser = function(post, callback) {
-	var username 	= post.Username;
-	var email 		= post.Email;
-	var password 	= post.Password;
-
-	// Perform post logic here using promises
+exports.getUsernameAndEmailPromise = function(usernae, email) {
 	var deferred = Q.defer();
 	exports.getUserByUsernameAndEmail(username, email, function(err, result) {
 		if (err) {
@@ -163,7 +156,57 @@ exports.registerUser = function(post, callback) {
 		return deferred.resolve(result);
 	});
 
+	return deferred.promise;
+};
 
+exports.postUserIntoUserInfoPromise = function(requestPostBody) {
+	var deferred = Q.defer();
+	exports.postUserIntoUserInfo(requestPostBody, function(err, res) {
+		if (err) {
+			return deferred.reject(err);
+		}
+		return deferred.resolve(res);
+	});
+
+	return deferred.promise;
+};
+
+exports.postUserIntoUserAccountPromise = function(requestPostBody) {
+	var deferred = Q.defer();
+	exports.postUserIntoUserAccount(requestPostBody, function(err, res) {
+		if (err) {
+			return deferred.reject(err);
+		}
+		return deferred.resolve(res);
+	});
+
+	return deferred.promise;
+};
+
+exports.registerUser = function(post, callback) {
+	var username 	= post.Username;
+	var email 		= post.Email;
+	var password 	= post.Password;
+
+	// Perform post logic here using promises
+	var promises = [];
+	promises.push(exports.getUsernameAndEmailPromise(username, email));
+	promises.push(exports.postUserIntoUserInfoPromise(post));
+	promises.push(exports.postUserIntoUserAccountPromise(userAccountPost));
+
+
+	var funcs = [foo, bar, baz, qux];
+
+	// var result = Q(initialVal);
+	// funcs.forEach(function (f) {
+	//     result = result.then(f);
+	// });
+	// return result;
+	// You can make this slightly more compact using reduce:
+
+	// return funcs.reduce(function (soFar, f) {
+	//     return soFar.then(f);
+	// }, Q(initialVal));
 
 	return callback(deferred.promise);
 		/*
