@@ -147,6 +147,8 @@ function _registerAndValidateUser(post, callback) {
 }
 */
 
+exports.
+
 exports.registerUser = function(post, callback) {
 	var username 	= post.Username;
 	var email 		= post.Email;
@@ -160,6 +162,8 @@ exports.registerUser = function(post, callback) {
 		}
 		return deferred.resolve(result);
 	});
+
+
 
 	return callback(deferred.promise);
 		/*
