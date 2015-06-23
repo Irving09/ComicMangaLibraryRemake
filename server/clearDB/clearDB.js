@@ -95,65 +95,14 @@ exports.postUserIntoUserAccount = function(requestPostBody, callback) {
 	});
 };
 
-/*
-
-function _registerAndValidateUser(post, callback) {
-	var username = post.Username,
-		email = post.Email,
-		useraccountPost = { Username : post.Username, Pw : post.Password };
-	delete post['Password'];
-
-	pool.getConnection(function(err, connection) {
-		checkSQLConnection(err, connection);
-	    connection.query('select Username, Email from userinfo', function(err, dbResult) {
-	        if (err) {
-	            return callback(err, null);
-	        } else {
-	            var searchUser = _und.find(dbResult, function(row) {
-	                return row.username == username || row.Email == email;
-	            });
-
-	            if (searchUser != null) {
-	            	console.log('It is really in here');
-	            	return callback(new Error('Duplicated User'), null);
-	            }
-
-	            connection.query('insert into userinfo set ?', post, function(err, dbResult, fields) {
-	            	//{"fieldCount":0,"affectedRows":1,"insertId":182,"serverStatus":2,"warningCount":0,"message":"","protocol41":true,"changedRows":0}
-
-	                if (err) {
-	                    return callback(err, null);
-	                } else {
-	                	useraccountPost.UserNo = dbResult.insertId;
-
-	                	connection.query('insert into useraccount set ?', useraccountPost, function(err, dbResult, fields) {
-			            	connection.release();
-			            	if (err) {
-			            		return callback(err, null);
-			            	} else {
-			            		return callback(null, useraccountPost);
-			            	}
-		            	});
-	                }
-	            });
-
-	            console.log('useraccountPost: ' + JSON.stringify(useraccountPost));
-
-	            //insert into useraccount (UserNo, Username, Pw) values(888, 'inno23', 'xxxx');
-	            
-	        }
-	    });
-	});
-}
-*/
-
-exports.getUsernameAndEmailPromise = function(usernae, email) {
+exports.getUsernameAndEmailPromise = function(username, email) {
 	var deferred = Q.defer();
 	exports.getUserByUsernameAndEmail(username, email, function(err, result) {
 		if (err) {
 			return deferred.reject(err);
 		}
 		return deferred.resolve(result);
+
 	});
 
 	return deferred.promise;
@@ -167,7 +116,6 @@ exports.postUserIntoUserInfoPromise = function(requestPostBody) {
 		}
 		return deferred.resolve(res);
 	});
-
 	return deferred.promise;
 };
 
@@ -189,13 +137,38 @@ exports.registerUser = function(post, callback) {
 	var password 	= post.Password;
 
 	// Perform post logic here using promises
-	var promises = [];
-	promises.push(exports.getUsernameAndEmailPromise(username, email));
-	promises.push(exports.postUserIntoUserInfoPromise(post));
-	promises.push(exports.postUserIntoUserAccountPromise(userAccountPost));
+	var promises = [
+		exports.getUsernameAndEmailPromise(username, email)//,
+		// exports.postUserIntoUserInfoPromise(post),
+		// exports.postUserIntoUserAccountPromise(userAccountPost)
+	];
 
+	var result = promises.reduce(function(beforePromise, currentPromise) {
+		return beforePromise.then(currentPromise);
+	});
 
-	var funcs = [foo, bar, baz, qux];
+	return callback(result);
+
+	// return funcs.reduce(function (soFar, f) {
+ 	//    	return soFar.then(f);
+	// }, Q(initialVal));
+
+	// promises.push(exports.getUsernameAndEmailPromise(username, email));
+	// promises.push(exports.postUserIntoUserInfoPromise(post));
+	// promises.push(exports.postUserIntoUserAccountPromise(userAccountPost));
+
+	// promises.forEach(function(f) {
+	// 	result = result.then(f);
+	// });
+
+	// return callback(promises.reduce(function(sofar, f) {
+	// 	return sofar.then(f);
+	// }, result).promsie);
+
+	// return callback(promises.reduce(function(promiseFulfilled, promise) {
+	// 	return promiseFulfilled.then(promise);
+	// }));
+
 
 	// var result = Q(initialVal);
 	// funcs.forEach(function (f) {
@@ -208,7 +181,7 @@ exports.registerUser = function(post, callback) {
 	//     return soFar.then(f);
 	// }, Q(initialVal));
 
-	return callback(deferred.promise);
+	// return callback(deferred.promise);
 		/*
 		Q.fcall(promisedStep1)
 		.then(promisedStep2)
