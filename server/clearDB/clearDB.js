@@ -97,11 +97,11 @@ exports.postUserIntoUserAccount = function(requestPostBody, callback) {
 
 exports.getUsernameAndEmailPromise = function(username, email) {
 	var deferred = Q.defer();
-	exports.getUserByUsernameAndEmail(username, email, function(err, result) {
+	exports.getUserByUsernameAndEmail(username, email, function(err, res) {
 		if (err) {
 			return deferred.reject(err);
 		}
-		return deferred.resolve(result);
+		return deferred.resolve(res);
 
 	});
 
@@ -138,16 +138,19 @@ exports.registerUser = function(post, callback) {
 
 	// Perform post logic here using promises
 	var promises = [
-		exports.getUsernameAndEmailPromise(username, email)//,
-		// exports.postUserIntoUserInfoPromise(post),
+		exports.postUserIntoUserInfoPromise(post)
 		// exports.postUserIntoUserAccountPromise(userAccountPost)
 	];
 
-	var result = promises.reduce(function(beforePromise, currentPromise) {
-		return beforePromise.then(currentPromise);
-	});
+	// var result = promises.reduce(function(previousPromise, currentPromise) {
+	// 	return previousPromise.then(currentPromise);
+	// });
 
-	return callback(result);
+
+	// return promises.reduce(Q.when, Q(initialVal));
+	return callback(promises.reduce(Q.when,
+		exports.getUsernameAndEmailPromise(username, email))
+	);
 
 	// return funcs.reduce(function (soFar, f) {
  	//    	return soFar.then(f);

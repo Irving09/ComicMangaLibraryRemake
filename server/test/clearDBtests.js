@@ -544,8 +544,8 @@ describe('postUserIntoUserAccountPromise', function() {
     var assertionTests      = false,
         connectionObject    = null,
         poolConnectionError = null,
-        dbPostError       = null,
-        dbPostResult      = null,
+        dbPostError         = null,
+        dbPostResult        = null,
         sandbox             = sinon.sandbox.create(),
         fakePool;
 
@@ -611,33 +611,71 @@ describe('postUserIntoUserAccountPromise', function() {
 
 // *********** start registerUser tests *********** //
 describe('registerUser', function() {
-    it('should reject the first promise - getUsernameAndEmailPromise', sinon.test(function(done) {
-        var assertionTests      = false,
-            connectionObject    = null,
-            poolConnectionError = null,
-            dbSelectError       = null,
-            dbInsertUserInfoErr = null,
-            dbInsertUserAccErr  = null,
-            dbSelectError       = null,
-            dbSelectResult      = null,
-            dbPostInput         = null,
-            dbPostError         = null,
-            dbPostResult        = null,
-            sandbox             = sinon.sandbox.create(),
-            fakePool;
+    var assertionTests      = false,
+        connectionObject    = null,
+        poolConnectionError = null,
+        dbSelectError       = null,
+        dbSelectResult      = null,
+        dbInsertUserInfoErr = null,
+        dbInsertUserInfoRes = null,
+        dbInsertUserAccErr  = null,
+        dbInsertUserAccRes  = null,
+        sandbox             = sinon.sandbox.create();
 
+    afterEach(function() {
+        assertionTests      = false,
+        connectionObject    = null,
+        poolConnectionError = null,
+        dbSelectError       = null,
+        dbSelectResult      = null,
+        dbInsertUserInfoErr = null,
+        dbInsertUserInfoRes = null,
+        dbInsertUserAccErr  = null,
+        dbInsertUserAccRes  = null,
+        sandbox.restore();
+    });
+
+    it('should reject the first promise - getUsernameAndEmailPromise', sinon.test(function(done) {
         dbSelectError = 'Promise Rejected';
         sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
 
         // Act
         unitUnderTest.registerUser({}, function(promise) {
-            
-            done();
+            promise.then(function() {/*NOT INVOKED*/}, function(rejectedReason) {
+                assert.ok(rejectedReason === dbSelectError);
+                assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
+                assertionTests = true;
+            }).done(function() {
+                assert.ok(assertionTests, 'Assertions did not get run');
+                done();
+            });
         });
-
-        // done();
     }));
-    // it('should reject the second promise - postUserIntoUserInfoPromise');
+
+    // TODO Not yet implemented
+
+    // it('should reject the second promise - getUsernameAndEmailPromise', sinon.test(function(done) {
+    //     dbSelectError       = null;
+    //     dbSelectResult      = 'Fulfilled Promise';
+    //     dbInsertUserInfoErr = 'Rejected Promise';
+    //     dbInsertUserInfoRes = null;
+    //     sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
+    //     sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
+
+    //     // Act
+    //     unitUnderTest.registerUser({}, function(promise) {
+    //         // done();
+    //         promise.then(function() {/*NOT INVOKED*/}, function(rejectedReason) {
+    //             console.log('Second Promise: ', rejectedReason);
+    //             assert.ok(rejectedReason === dbInsertUserInfoErr);
+    //             assertionTests = true;
+    //         }).done(function() {
+    //             assert.ok(assertionTests, 'Assertions did not get run');
+    //             done();
+    //         });
+    //     });
+    // }));
+
     // it('should reject the third promise - postUserIntoUserAccountPromise');
 });
 // *********** end registerUser tests *********** //
