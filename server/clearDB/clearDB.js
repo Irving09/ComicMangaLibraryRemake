@@ -137,86 +137,40 @@ exports.registerUser = function(post, callback) {
 	var password 	= post.Password;
 
 	// Perform post logic here using promises
-	var promises = [
-		exports.postUserIntoUserInfoPromise(post)
-		// exports.postUserIntoUserAccountPromise(userAccountPost)
+	var promiseReturningFunctions = [
+        function() {
+        	return exports.postUserIntoUserInfoPromise(post);
+        },
+
+        function() {
+        	var userAccountPost = { Username : username, Pw : password };
+        	return exports.postUserIntoUserAccountPromise(userAccountPost)
+        }
 	];
 
-	// var result = promises.reduce(function(previousPromise, currentPromise) {
+	// TODO
+
+	var finalPromise = promiseReturningFunctions.reduce(function(previousPromise, currentPromise) {
+		return previousPromise.then(currentPromise);
+    }, exports.getUsernameAndEmailPromise(username, email));
+
+
+
+	// var userAccountPost = { Username : username, Pw : password };
+
+	// var promiseReturningFunctions = [
+	// 	exports.getUsernameAndEmailPromise(username, email),
+ //    	exports.postUserIntoUserInfoPromise(post),
+ //    	exports.postUserIntoUserAccountPromise(userAccountPost)
+	// ];
+
+	// var finalPromise = promiseReturningFunctions.reduce(function(previousPromise, currentPromise) {
 	// 	return previousPromise.then(currentPromise);
-	// });
-
-
-	// return promises.reduce(Q.when, Q(initialVal));
-	return callback(promises.reduce(Q.when,
-		exports.getUsernameAndEmailPromise(username, email))
-	);
-
-	// return funcs.reduce(function (soFar, f) {
- 	//    	return soFar.then(f);
-	// }, Q(initialVal));
-
-	// promises.push(exports.getUsernameAndEmailPromise(username, email));
-	// promises.push(exports.postUserIntoUserInfoPromise(post));
-	// promises.push(exports.postUserIntoUserAccountPromise(userAccountPost));
-
-	// promises.forEach(function(f) {
-	// 	result = result.then(f);
-	// });
-
-	// return callback(promises.reduce(function(sofar, f) {
-	// 	return sofar.then(f);
-	// }, result).promsie);
-
-	// return callback(promises.reduce(function(promiseFulfilled, promise) {
-	// 	return promiseFulfilled.then(promise);
-	// }));
-
-
-	// var result = Q(initialVal);
-	// funcs.forEach(function (f) {
-	//     result = result.then(f);
-	// });
-	// return result;
-	// You can make this slightly more compact using reduce:
-
-	// return funcs.reduce(function (soFar, f) {
-	//     return soFar.then(f);
-	// }, Q(initialVal));
-
-	// return callback(deferred.promise);
-		/*
-		Q.fcall(promisedStep1)
-		.then(promisedStep2)
-		.then(promisedStep3)
-		.then(promisedStep4)
-		.then(function (value4) {
-		    // Do something with value4 
-		})
-		.catch(function (error) {
-		    // Handle any error from all above steps 
-		})
-		.done();
-		*/
-
-    // exports.getUserByUsernameAndEmail(username, email, function(userExists, result) {
-	// 	if (userExists) {
-
-	// 	}
-	// 	exports.postUserIntoUserInfo({}, function(userInfoError, result) {
-	// 		if (userInfoErrorrr) {
-
-	// 		}
-	// 		exports.postUserIntoUserAccount({}, function(userAccountError) {
-	// 			if (userAccountError) {
-
-	// 			}
-	// 		});
-	// 	});
-	// });
-
+ //    });
 
 	// useraccountPost = { Username : post.Username, Pw : post.Password };
+
+	return callback(finalPromise);
 };
 
 /*

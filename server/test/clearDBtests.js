@@ -620,82 +620,128 @@ describe('registerUser', function() {
         dbInsertUserInfoRes = null,
         dbInsertUserAccErr  = null,
         dbInsertUserAccRes  = null,
+        fakePool            = null,
         sandbox             = sinon.sandbox.create();
 
+    beforeEach(function() {
+        connectionObject = {
+            release : sandbox.stub()
+        };
+
+        fakePool = {
+            getConnection : function(connectionCallback) {
+                connectionCallback(poolConnectionError, connectionObject);
+            }
+        };
+
+        sandbox.stub(unitUnderTest, 'getPool').returns(fakePool);
+    });
+
     afterEach(function() {
-        assertionTests      = false,
-        connectionObject    = null,
-        poolConnectionError = null,
-        dbSelectError       = null,
-        dbSelectResult      = null,
-        dbInsertUserInfoErr = null,
-        dbInsertUserInfoRes = null,
-        dbInsertUserAccErr  = null,
-        dbInsertUserAccRes  = null,
+        assertionTests      = false;
+        connectionObject    = null;
+        poolConnectionError = null;
+        dbSelectError       = null;
+        dbSelectResult      = null;
+        dbInsertUserInfoErr = null;
+        dbInsertUserInfoRes = null;
+        dbInsertUserAccErr  = null;
+        dbInsertUserAccRes  = null;
+
         sandbox.restore();
     });
 
     it('should reject the first promise - getUsernameAndEmailPromise', sinon.test(function(done) {
-        dbSelectError = 'Promise Rejected';
-        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
+        dbSelectError = new Error('Promise1 rejected');
+        dbSelectResult = null;
 
-        // Act
-        unitUnderTest.registerUser({}, function(promise) {
-            promise.then(function() {/*NOT INVOKED*/}, function(rejectedReason) {
+        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, null);
+
+        // // Act
+        unitUnderTest.registerUser({Username : 'inno', Email: 'inno@abc.com', Password: 'inno_secret'}, function(promise) {
+            promise.done(undefined, function(rejectedReason) {
                 assert.ok(rejectedReason === dbSelectError);
-                assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
                 assertionTests = true;
-            }).done(function() {
                 assert.ok(assertionTests, 'Assertions did not get run');
                 done();
             });
         });
     }));
 
-    // TODO Not yet implemented
+    it('should reject the second promise - getUsernameAndEmailPromise', sinon.test(function(done) {
+        dbSelectError = null;
+        dbSelectResult = 'Promise1 fulfilled';
+        dbInsertUserInfoErr = new Error('Promise2 Rejected');
+        dbInsertUserInfoRes = null;
 
-    // it('should reject the second promise - getUsernameAndEmailPromise', sinon.test(function(done) {
-    //     dbSelectError       = null;
-    //     dbSelectResult      = 'Fulfilled Promise';
-    //     dbInsertUserInfoErr = 'Rejected Promise';
-    //     dbInsertUserInfoRes = null;
-    //     sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
-    //     sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
+        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, null);
+        sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
 
-    //     // Act
-    //     unitUnderTest.registerUser({}, function(promise) {
-    //         // done();
-    //         promise.then(function() {/*NOT INVOKED*/}, function(rejectedReason) {
-    //             console.log('Second Promise: ', rejectedReason);
-    //             assert.ok(rejectedReason === dbInsertUserInfoErr);
-    //             assertionTests = true;
-    //         }).done(function() {
-    //             assert.ok(assertionTests, 'Assertions did not get run');
-    //             done();
-    //         });
-    //     });
-    // }));
+        // Act
+        unitUnderTest.registerUser({Username : 'inno', Email: 'inno@abc.com', Password: 'inno_secret'}, function(promise) {
+            promise.done(undefined, function(rejectedReason) {
+                assert.ok(rejectedReason === dbInsertUserInfoErr);
+                assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
+                assertionTests = true;
+                assert.ok(assertionTests, 'Assertions did not get run');
+                done();
+            });
+        });
+    }));
 
-    // it('should reject the third promise - postUserIntoUserAccountPromise');
+    it('should reject the third promise - postUserIntoUserAccountPromise', sinon.test(function(done) {
+        dbSelectError = null;
+        dbSelectResult = 'Promise1 fulfilled';
+        dbInsertUserInfoErr = null;
+        dbInsertUserInfoRes = 'Promise2 fulfilled';
+        dbInsertUserAccErr  = new Error('Promise3 rejected');
+        dbInsertUserAccRes  = null;
+
+        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, null);
+        sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
+        sandbox.stub(unitUnderTest, 'postUserIntoUserAccount').callsArgWith(1, dbInsertUserAccErr, dbInsertUserAccRes);
+
+        // Act
+        unitUnderTest.registerUser({Username : 'inno', Email: 'inno@abc.com', Password: 'inno_secret'}, function(promise) {
+            promise.done(undefined, function(rejectedReason) {
+                assert.ok(rejectedReason === dbInsertUserAccErr);
+                assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
+                assert.ok(unitUnderTest.postUserIntoUserInfo.calledOnce);
+                assertionTests = true;
+                assert.ok(assertionTests, 'Assertions did not get run');
+                done();
+            });
+        });
+    }));
+
+    it('should fulfill all promises in sequence - success case', sinon.test(function(done) {
+        dbSelectError = null;
+        dbSelectResult = 'Promise1 fulfilled';
+        dbInsertUserInfoErr = null;
+        dbInsertUserInfoRes = 'Promise2 fulfilled';
+        dbInsertUserAccErr  = null;
+        dbInsertUserAccRes  = 'Promise3 fulfilled';
+
+        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, null);
+        sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
+        sandbox.stub(unitUnderTest, 'postUserIntoUserAccount').callsArgWith(1, dbInsertUserAccErr, dbInsertUserAccRes);
+
+        // Act
+        unitUnderTest.registerUser({Username : 'inno', Email: 'inno@abc.com', Password: 'inno_secret'}, function(promise) {
+            promise.done(function(fulfilledValue) {
+                assert.ok(fulfilledValue === dbInsertUserAccRes);
+                assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
+                assert.ok(unitUnderTest.postUserIntoUserInfo.calledOnce);
+                assert.ok(unitUnderTest.postUserIntoUserAccount.calledOnce);
+                assert.ok(unitUnderTest.getUserByUsernameAndEmail
+                          .calledBefore(unitUnderTest.postUserIntoUserInfo), 'getUserByUserNameAndEmail should be called in sequence before postUserIntoUserInfo');
+                assert.ok(unitUnderTest.postUserIntoUserInfo
+                          .calledBefore(unitUnderTest.postUserIntoUserAccount), 'postUserIntoUserInfo should be called in sequence before postUserIntoUserAccount');
+                assertionTests = true;
+                assert.ok(assertionTests, 'Assertions did not get run');
+                done();
+            });
+        });
+    }));    
 });
 // *********** end registerUser tests *********** //
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
