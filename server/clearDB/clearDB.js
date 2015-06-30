@@ -148,41 +148,57 @@ exports.registerUser = function(post, callback) {
         }
 	];
 
-	// TODO
-
 	var finalPromise = promiseReturningFunctions.reduce(function(previousPromise, currentPromise) {
 		return previousPromise.then(currentPromise);
     }, exports.getUsernameAndEmailPromise(username, email));
 
-
-
-	// var userAccountPost = { Username : username, Pw : password };
-
-	// var promiseReturningFunctions = [
-	// 	exports.getUsernameAndEmailPromise(username, email),
- //    	exports.postUserIntoUserInfoPromise(post),
- //    	exports.postUserIntoUserAccountPromise(userAccountPost)
-	// ];
-
-	// var finalPromise = promiseReturningFunctions.reduce(function(previousPromise, currentPromise) {
-	// 	return previousPromise.then(currentPromise);
- //    });
-
-	// useraccountPost = { Username : post.Username, Pw : post.Password };
-
 	return callback(finalPromise);
 };
 
+exports.getBookByISBN = function(isbn, callback) {
+	exports.getPool().getConnection(function(connectionError, connection) {
+		if (connectionError) {
+			connection.release();
+			return callback(connectionError, null);
+		}
+		
+		// TODO
+		connection.query('select ISBN, Title, Author, Category from bookinfo', function(queryError, dbResult) {
+			connection.release();
+			if (queryError) {
+				return callback(queryError, null);
+			}
+
+			var res = _u.find(dbResult, function(row) {
+				return row.ISBN == isbn;
+			});
+
+			return callback(null, res);
+		});
+	});
+};
+
+// function _findMatchingISBN(isbn, callback) {
+// 	pool.getConnection(function(err, connection) {
+//         if (err) {
+//             connection.release();
+//             return callback(err, null);
+//         }
+// 		connection.query('select ISBN, Title, Author, Category from bookinfo', function(queryError, dbResult) {
+// 			if (queryError) {
+//                 return callback(queryError, null);
+//             } else {
+//                 var result = _und.find(dbResult, function(row) {
+//                 	return row.ISBN == isbn; //isbn == req.headers.isbn
+//                 });
+//                 callback(null, result);
+//             }
+// 		});
+// 	});
+// }
+
 /*
 module.exports = {
-	connectionPool : function() {
-		
-	},
-	getUser : function(username, password, callback) {
-		getPool.getConnection(function(err, conn) {
-
-		});
-	},
 	getBookByIsbn : function(isbn, callback) {
 
 	},
@@ -196,9 +212,6 @@ module.exports = {
 
 	},
 	getMangaBooks : function(callback) {
-
-	},
-	postUser : function(postBody, callback) {
 
 	}
 };
