@@ -6,7 +6,7 @@ var	mysql 	= require('mysql');
 var config	= require('../../../localDBConfigs/dbConfig');
 var Q 		= require('q');
 
-// var _pool   = mysql.createPool(config);
+var _pool   = mysql.createPool(config);
 
 exports.getPool = function() {
 	return _pool;
