@@ -2,10 +2,11 @@
 
 var _u 		= require('lodash');
 var	mysql 	= require('mysql');
-var config	= require('./dbConfig');
+// var config	= require('./dbConfig');
+var config	= require('../../../localDBConfigs/dbConfig');
 var Q 		= require('q');
 
-var _pool   = mysql.createPool(config);
+// var _pool   = mysql.createPool(config);
 
 exports.getPool = function() {
 	return _pool;
@@ -13,7 +14,6 @@ exports.getPool = function() {
 
 exports.getUserByUsernameAndPassword = function(username, password, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
-
 		if (connectionError) {
 			connection.release();
 			return callback(connectionError, null);
@@ -177,25 +177,6 @@ exports.getBookByISBN = function(isbn, callback) {
 		});
 	});
 };
-
-// function _findMatchingISBN(isbn, callback) {
-// 	pool.getConnection(function(err, connection) {
-//         if (err) {
-//             connection.release();
-//             return callback(err, null);
-//         }
-// 		connection.query('select ISBN, Title, Author, Category from bookinfo', function(queryError, dbResult) {
-// 			if (queryError) {
-//                 return callback(queryError, null);
-//             } else {
-//                 var result = _und.find(dbResult, function(row) {
-//                 	return row.ISBN == isbn; //isbn == req.headers.isbn
-//                 });
-//                 callback(null, result);
-//             }
-// 		});
-// 	});
-// }
 
 /*
 module.exports = {
