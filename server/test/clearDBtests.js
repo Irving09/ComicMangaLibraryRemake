@@ -1135,3 +1135,102 @@ describe('generateBookJSON', function() {
     }));
 });
 // *********** end generateBookJSON tests *********** //
+
+// *********** start getAuthor tests *********** //
+describe('getAuthor', function() {
+    var assertionTests;
+    var fakeConnection;
+    var sandbox;
+    var fakePool;
+
+    before(function() {
+        sandbox = sinon.sandbox.create();
+    });
+
+    beforeEach(function() {
+        fakePool = {
+            getConnection : sandbox.stub()
+        };
+        sandbox.stub(unitUnderTest, 'getPool').returns(fakePool);
+
+        fakeConnection = {
+            release : sandbox.stub(),
+            query : sandbox.stub()
+        };
+        assertionTests = false;
+    });
+
+    afterEach(function() {
+        sandbox.restore();
+    });
+
+    it('should get expected error from the callback when trying to get connection', sinon.test(function() {
+        var authorName = 'Smith Jones';
+        var expectedError = 'Expected Error';
+        fakePool.getConnection.callsArgWith(0, expectedError, fakeConnection);
+
+        unitUnderTest.getAuthor(authorName, function(actualError, actualResult) {
+            assert.ok(actualError === expectedError);
+            assert.ok(actualResult === undefined);
+            assert.ok(fakeConnection.release.calledOnce);
+            assertionTests = true;
+        });
+
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+
+    it('should get get an error in the connection.query callback', sinon.test(function() {
+        var authorName = 'smith jones';
+        var expectedError = new Error('Expected Error');
+        fakePool.getConnection.callsArgWith(0, undefined, fakeConnection);
+        fakeConnection.query.callsArgWith(2, expectedError, undefined);
+
+        unitUnderTest.getAuthor(authorName, function(actualError, actualResult) {
+            assert.ok(actualError === expectedError);
+            assertionTests = true;
+        });
+
+        assert.ok(assertionTests, 'tests in the callback did not get run');
+    }));
+
+    // it('should get expectedResult and call necessary methods', sinon.test(function() {
+    //     var authorName = 'smith jones';
+    //     var expectedDbResult = [
+    //         { 
+    //             Author : 'smith Jones',
+    //             ISBN : 12345,
+    //             Title : 'The black cannary',
+    //             Category : 'DC'
+    //         },
+    //         {
+    //             Author : 'Smith jonas',
+    //             ISBN : 67890,
+    //             Title : 'The white cannary',
+    //             Category : 'Marvel'
+    //         },
+    //         {
+    //             Author : 'Smith jones',
+    //             ISBN : 54321,
+    //             Title : 'The yellow cannary',
+    //             Category : 'Manga'
+    //         }
+    //     ];
+    //     fakePool.getConnection.callsArgWith(0, undefined, fakeConnection);
+    //     fakeConnection.query.callsArgWith(2, undefined, expectedDbResult);
+
+    //     unitUnderTest.getAuthor(authorName, function(actualError, actualResult) {
+    //         assert.ok(actualResult[0].Author === expectedDbResult[0].Author);
+    //         assert.ok(actualResult[0].ISBN === expectedDbResult[0].ISBN);
+    //         assert.ok(actualResult[0].Title === expectedDbResult[0].Title);
+    //         assert.ok(actualResult[0].Category === expectedDbResult[0].Category);
+
+    //         assert.ok(actualResult[1].Author === expectedDbResult[1].Author);
+    //         assert.ok(actualResult[1].ISBN === expectedDbResult[1].ISBN);
+    //         assert.ok(actualResult[1].Title === expectedDbResult[1].Title);
+    //         assert.ok(actualResult[1].Category === expectedDbResult[1].Category);
+    //         assertionTests = true;
+    //     });
+    //     assert.ok(assertionTests, 'tests in the callback did not get run');
+    // }));
+});
+// *********** end getAuthor tests *********** //

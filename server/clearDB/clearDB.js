@@ -157,75 +157,6 @@ exports.registerUser = function(post, callback) {
 	return callback(finalPromise);
 };
 
-// exports.getPool().getConnection(function(connectionError, connection) {
-// 		if (connectionError) {
-// 			connection.release();
-// 			return callback(connectionError, null);
-// 		}
-
-// 		connection.query('select Username, Email from userinfo', function(dbSelectError, dbSelectResult) {
-// 			connection.release();
-// 			if (dbSelectError) {
-// 				return callback(dbSelectError, null);
-// 			}
-
-// 			var searchUser = _u.find(dbSelectResult, function(row) {
-//                 return row.username == username || row.Email == email;
-//             });
-			
-// 			return callback(null, searchUser);
-// 		});
-// 	});
-
-// function _registerAndValidateUser(post, callback) {
-// 	var username = post.Username,
-// 		email = post.Email,
-// 		userPassword = post.Password,
-// 		userName = post.Username;
-// 	delete post['Password'];
-
-// 	pool.getConnection(function(err, connection) {
-//         if (err) {
-//             connection.release();
-//             return callback(err, null);
-//         }
-// 	    connection.query('select Username, Email from userinfo', function(err, dbResult) {
-// 	        if (err) {
-// 	            return callback(err, null);
-// 	        } else {
-// 	            var searchUser = _und.find(dbResult, function(row) {
-// 	                return row.username == username || row.Email == email;
-// 	            });
-// 	            console.log('searchUser: ' + JSON.stringify(searchUser));
-// 	            if (searchUser != null) {
-// 	            	console.log('it is really in here');
-// 	            	return callback(new Error('Duplicated User'), null);
-// 	            }
-
-// 	            connection.query('insert into userinfo set ?', post, function(err, dbResult, fields) {
-// 	                if (err) {
-// 	                    return callback(err, null);
-// 	                } else {
-// 	                	var useraccountPost = { 
-// 	                		Username : userName, 
-// 	                		Pw : userPassword,
-// 	                		UserNo : dbResult.insertId
-// 	                	}
-// 	                	connection.query('insert into useraccount set ?', useraccountPost, function(err, dbResult, fields) {
-// 			            	connection.release();
-// 			            	if (err) {
-// 			            		return callback(err, null);
-// 			            	} else {
-// 			            		return callback(null, useraccountPost);
-// 			            	}
-// 		            	});
-// 	                }
-// 	            });
-// 	        }
-// 	    });
-// 	});
-// }
-
 exports.getBookByISBN = function(isbn, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
 		if (connectionError) {
@@ -324,12 +255,93 @@ exports.generateBookJSON = function(dbResult) {
 	});
 };
 
+exports.getAuthor = function(authorName, callback) {
+	exports.getPool().getConnection(function(connectionError, connection) {
+		if (connectionError) {
+			connection.release();
+			return callback(connectionError, undefined);
+		}
+		//req.headers.author
+		var queryString = 'select ISBN, Author, Title, Category from bookinfo where Author like ?';
+		connection.query(queryString, '%' + authorName + '%', function(err, dbResult) {
+			if (err) {
+				return callback(err, undefined);
+			}
+
+			//test.indexOf(req.headers.author.toLowerCase())
+
+			// var result = dbResult.reduce(function(currentValue) {
+			// 	console.log('currentValue:', currentValue);
+			// 	return currentValue;
+			// }, []);
+
+			// function(currentResult, dbRow) {
+				// if (dbRow.Author.toLowerCase().indexOf(authorName.toLowerCase()) > -1) {
+				// 	currentResult.push({
+				// 		ISBN : dbRow.ISBN,
+				// 		Author : dbRow.Author,
+				// 		Title : dbRow.Title,
+				// 		Category : dbRow.Category,
+				// 	});
+				// 	return currentResult;
+				// }
+				
+			// }, []
+			// callback(undefined, result);
+			// var isbn = rows[value].ISBN;
+			// var author = rows[value].Author;
+			// var title = rows[value].Title;
+			// var category = rows[value].Category;
+		});
+	});
+};
+
+// app.get('/author-search', function(req, res) {
+//     pool.getConnection(function(err, connection) {
+//         if (err) {
+//             connection.release();
+//             res.json({
+//                 "code": 100,
+//                 "status": "Error in connection database"
+//             });
+//             return;
+//         }
+//         connection.query('select ISBN, Author, Title, Category from bookinfo where Author like ?', '%' + req.headers.author + '%', function(err, rows, fields) {
+//             if (err) {
+//                 console.log(err);
+//                 res.send(err);
+//             } else {
+//                 var result = false,
+//                     resultList = [];
+//                 for (var value in rows) {
+//                     console.log(rows[value]);
+//                     var test = rows[value].Author.toLowerCase();
+//                     if (test.indexOf(req.headers.author.toLowerCase()) > -1) {
+//                         var isbn = rows[value].ISBN;
+//                         var author = rows[value].Author;
+//                         var title = rows[value].Title;
+//                         var category = rows[value].Category;
+//                         result = true;
+//                         resultList.push('<div class="container searchbox-div"><div>' + isbn + '</div><div><strong>' + author + '</strong></div><div>' + title + '</div><div> ' + category + '</div></div>');
+//                     }
+//                 }
+//                 if (result) {
+//                     var resultListTemplate = '';
+//                     resultList.forEach(function(html) {
+//                         resultListTemplate += html;
+//                     });
+//                     return res.send(resultListTemplate);
+//                 } else {
+//                     return res.send(false);
+//                 }
+//             }
+//         });
+//     });
+// });
+
 /*
 module.exports = {
 	getAuthor : function(name, callback) {
-
-	},
-	getDCBooks : function(callback) {
 
 	}
 };
