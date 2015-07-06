@@ -32,24 +32,27 @@ exports.getUserByUsernameAndPassword = function(username, password, callback) {
 	});
 };
 
-exports.getUserByUsernameAndEmail = function(username, email, callback) {
+exports.isUniqueUsernameAndEmail = function(username, email, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
 		if (connectionError) {
 			connection.release();
-			return callback(connectionError, null);
+			return callback(connectionError, undefined);
 		}
 
 		connection.query('select Username, Email from userinfo', function(dbSelectError, dbSelectResult) {
 			connection.release();
 			if (dbSelectError) {
-				return callback(dbSelectError, null);
+				return callback(dbSelectError, undefined);
 			}
 
 			var searchUser = _u.find(dbSelectResult, function(row) {
-                return row.username == username || row.Email == email;
+            	return row.username === username || row.Email === email;
             });
-			
-			return callback(null, searchUser);
+
+            if (searchUser != null) {
+            	return callback(new Error('The username or email is already taken'), undefined);
+            }
+			return callback(undefined, true);
 		});
 	});
 }
@@ -97,14 +100,12 @@ exports.postUserIntoUserAccount = function(requestPostBody, callback) {
 
 exports.getUsernameAndEmailPromise = function(username, email) {
 	var deferred = Q.defer();
-	exports.getUserByUsernameAndEmail(username, email, function(err, res) {
+	exports.isUniqueUsernameAndEmail(username, email, function(err, res) {
 		if (err) {
 			return deferred.reject(err);
 		}
 		return deferred.resolve(res);
-
 	});
-
 	return deferred.promise;
 };
 
@@ -136,24 +137,94 @@ exports.registerUser = function(post, callback) {
 	var email 		= post.Email;
 	var password 	= post.Password;
 
-	// Perform post logic here using promises
-	var promiseReturningFunctions = [
-        function() {
-        	return exports.postUserIntoUserInfoPromise(post);
-        },
+	// deleted the old Password property from the original post here???
 
-        function() {
-        	var userAccountPost = { Username : username, Pw : password };
-        	return exports.postUserIntoUserAccountPromise(userAccountPost)
-        }
-	];
+	var finalPromise = exports.getUsernameAndEmailPromise(username, email)
+		.then(function(fulfilledValue) {
+			return  exports.postUserIntoUserInfoPromise(post);
+		})
+		.then(function(fulfilledValue) {
+			// TODO Implement dbResult.insertId
+			var userAccountPost = {
+				Username : username,
+				Pw : password,
+				UserNo : fulfilledValue.insertId
+			};
 
-	var finalPromise = promiseReturningFunctions.reduce(function(previousPromise, currentPromise) {
-		return previousPromise.then(currentPromise);
-    }, exports.getUsernameAndEmailPromise(username, email));
+			return exports.postUserIntoUserAccountPromise(userAccountPost); 
+		});
 
 	return callback(finalPromise);
 };
+
+// exports.getPool().getConnection(function(connectionError, connection) {
+// 		if (connectionError) {
+// 			connection.release();
+// 			return callback(connectionError, null);
+// 		}
+
+// 		connection.query('select Username, Email from userinfo', function(dbSelectError, dbSelectResult) {
+// 			connection.release();
+// 			if (dbSelectError) {
+// 				return callback(dbSelectError, null);
+// 			}
+
+// 			var searchUser = _u.find(dbSelectResult, function(row) {
+//                 return row.username == username || row.Email == email;
+//             });
+			
+// 			return callback(null, searchUser);
+// 		});
+// 	});
+
+// function _registerAndValidateUser(post, callback) {
+// 	var username = post.Username,
+// 		email = post.Email,
+// 		userPassword = post.Password,
+// 		userName = post.Username;
+// 	delete post['Password'];
+
+// 	pool.getConnection(function(err, connection) {
+//         if (err) {
+//             connection.release();
+//             return callback(err, null);
+//         }
+// 	    connection.query('select Username, Email from userinfo', function(err, dbResult) {
+// 	        if (err) {
+// 	            return callback(err, null);
+// 	        } else {
+// 	            var searchUser = _und.find(dbResult, function(row) {
+// 	                return row.username == username || row.Email == email;
+// 	            });
+// 	            console.log('searchUser: ' + JSON.stringify(searchUser));
+// 	            if (searchUser != null) {
+// 	            	console.log('it is really in here');
+// 	            	return callback(new Error('Duplicated User'), null);
+// 	            }
+
+// 	            connection.query('insert into userinfo set ?', post, function(err, dbResult, fields) {
+// 	                if (err) {
+// 	                    return callback(err, null);
+// 	                } else {
+// 	                	var useraccountPost = { 
+// 	                		Username : userName, 
+// 	                		Pw : userPassword,
+// 	                		UserNo : dbResult.insertId
+// 	                	}
+// 	                	connection.query('insert into useraccount set ?', useraccountPost, function(err, dbResult, fields) {
+// 			            	connection.release();
+// 			            	if (err) {
+// 			            		return callback(err, null);
+// 			            	} else {
+// 			            		return callback(null, useraccountPost);
+// 			            	}
+// 		            	});
+// 	                }
+// 	            });
+// 	        }
+// 	    });
+// 	});
+// }
 
 exports.getBookByISBN = function(isbn, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
@@ -178,21 +249,87 @@ exports.getBookByISBN = function(isbn, callback) {
 	});
 };
 
+exports.getMangaBooks = function(callback) {
+	exports.getPool().getConnection(function(connectionError, connection) {
+		if (connectionError) {
+			connection.release();
+			return callback(connectionError, undefined);
+		}
+
+		var queryString ="select ISBN, Author, Title, Category from bookinfo where Category='Manga'";
+		connection.query(queryString, function(queryError, dbResult) {
+			connection.release();
+			if (queryError) {
+				return callback(queryError, undefined);
+			}
+
+			var result = dbResult.map(function(row) {
+				return {
+					isbn : row.ISBN,
+                    author : row.Author,
+                    title : row.Title,
+                    category : row.Category
+				};
+			});
+
+			return callback(undefined, result);
+		});
+	});
+};
+
+exports.getMarvelBooks = function(callback) {
+	exports.getPool().getConnection(function(connectionError, connection) {
+		if (connectionError) {
+			connection.release();
+			return callback(connectionError, undefined);
+		}
+
+		var queryString = 'select ISBN, Author, Title, Category from bookinfo where Category=\'Marvel Comics\'';
+		connection.query(queryString, function(queryError, dbResult) {
+			connection.release();
+			if (queryError) {
+                return callback(queryError, undefined);
+            }
+        	return callback(undefined, exports.generateBookJSON(dbResult));
+		});
+	});
+};
+
+exports.getDCBooks = function(callback) {
+	exports.getPool().getConnection(function(connectionError, connection) {
+		if (connectionError) {
+			connection.release();
+			return callback(connectionError, undefined);
+		}
+
+		var queryString = 'select ISBN, Author, Title, Category from bookinfo where Category=\'DC Comics\'';
+		connection.query(queryString, function(queryError, dbResult) {
+			connection.release();
+			if (queryError) {
+                return callback(queryError, null);
+            }
+            return callback(undefined, exports.generateBookJSON(dbResult));
+		});
+	});
+};
+
+exports.generateBookJSON = function(dbResult) {
+	return dbResult.map(function(row) {
+		return {
+			isbn : row.ISBN,
+            author : row.Author,
+            title : row.Title,
+            category : row.Category
+        };
+	});
+};
+
 /*
 module.exports = {
-	getBookByIsbn : function(isbn, callback) {
-
-	},
 	getAuthor : function(name, callback) {
 
 	},
 	getDCBooks : function(callback) {
-
-	},
-	getMarvelBooks : function(callback) {
-
-	},
-	getMangaBooks : function(callback) {
 
 	}
 };

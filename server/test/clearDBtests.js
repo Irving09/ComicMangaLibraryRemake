@@ -95,8 +95,8 @@ describe('getUserByUsernameAndPassword', function() {
 });
 // *********** end getUserByUsernameAndPassword tests*********** //
 
-// *********** start getUserByUsernameAndEmail tests *********** //
-describe('getUserByUsernameAndEmail', function() {
+// *********** start isUniqueUsernameAndEmail tests *********** //
+describe('isUniqueUsernameAndEmail', function() {
     var assertionTests      = false,
         connectionObject    = null,
         poolConnectionError = null,
@@ -108,6 +108,7 @@ describe('getUserByUsernameAndEmail', function() {
     beforeEach(function() {
         connectionObject = {
             release : sandbox.stub(),
+            query   : sandbox.stub()
         };
 
         fakePool = {
@@ -129,11 +130,11 @@ describe('getUserByUsernameAndEmail', function() {
         poolConnectionError = 'Pool Connection Error';
 
         // act
-        unitUnderTest.getUserByUsernameAndEmail('username', 'password', function(error, result) {
+        unitUnderTest.isUniqueUsernameAndEmail('username', 'password', function(error, result) {
             assert.ok(unitUnderTest.getPool.calledOnce);
             assert.ok(error === poolConnectionError);
             assert.ok(connectionObject.release.calledOnce);
-            assert.ok(null === result);
+            assert.ok(undefined === result);
             assertionTests = true;
         });
 
@@ -145,15 +146,15 @@ describe('getUserByUsernameAndEmail', function() {
         // Arrange
         poolConnectionError     = null;
         dbQueryError            = 'DB Query Error';
-        dbQueryResult             = null;
+        dbQueryResult           = null;
         connectionObject.query  = sandbox.stub().callsArgWith(1, dbQueryError, dbQueryResult);
 
         // Act
-        unitUnderTest.getUserByUsernameAndEmail('username', 'password', function(error, result) {
+        unitUnderTest.isUniqueUsernameAndEmail('username', 'password', function(error, result) {
             assert.ok(unitUnderTest.getPool.calledOnce, 'getPool was not called once'); 
             assert.ok(error === dbQueryError);
             assert.ok(connectionObject.release.calledOnce);
-            assert.ok(null === result);
+            assert.ok(undefined === result);
             assertionTests = true;
         });
 
@@ -161,28 +162,48 @@ describe('getUserByUsernameAndEmail', function() {
         assert.ok(assertionTests, 'Tests inside callback did not get run');
     }));
 
-    it('should be able to call back with the expected result', sinon.test(function() {
+    it('should fail - duplicate user', sinon.test(function() {
         // Arrange
-        poolConnectionError = null;
-        dbQueryError = null;
-        dbQueryResult = 'DB Query Result';
-        connectionObject.query = sandbox.stub().callsArgWith(1, dbQueryError, dbQueryResult);
-        sandbox.stub(_u, 'find').returns(dbQueryResult);
+        var duplicateUsername   = 'DUPLICATE USERNAME';
+        var uniqueEmail         = 'UNIQUE EMAIL';
+        var expectedDbResult    = [ { username : duplicateUsername } ];
+        connectionObject.query.callsArgWith(1, undefined, expectedDbResult)
 
         // Act
-        unitUnderTest.getUserByUsernameAndEmail('username', 'password', function(error, result) {
-            assert.ok(unitUnderTest.getPool.calledOnce, 'getPool was not called once'); 
-            assert.ok(error === dbQueryError, 'there should be no call back error');
-            assert.ok(connectionObject.release.calledOnce, 'connection.release() should have been called inside the query callback');
-            assert.ok(dbQueryResult === result, 'callback\'s result from lodash\'s find function should equal the expectation' + dbQueryResult);
+        unitUnderTest.isUniqueUsernameAndEmail(duplicateUsername, uniqueEmail, function(actualError, actualResult) {
+            // Assert
+            assert.ok(actualError.message === 'The username or email is already taken');
+            assert.ok(actualResult === undefined);
+            assert.ok(connectionObject.query.calledOnce);
+            assert.ok(connectionObject.release.calledOnce);
             assertionTests = true;
         });
+        assert.ok(assertionTests, 'Tests inside callback did not get run');
+    }));
 
-        // assert
+    it('should be able to call back with the expected result - success case', sinon.test(function() {
+        // Arrange
+        var uniqueUsername          = 'different username lol';
+        var uniqueEmail             = 'different Email lol';
+        var expectedDbSelectResult  = [{ username : 'unique', Email : 'unique@unique.com' }];
+        var expectedResultMessage   = 'SUCCESS';
+        connectionObject.query.callsArgWith(1, undefined, expectedDbSelectResult)
+        this.stub(_u, 'find').returns(undefined);
+
+        // Act
+        unitUnderTest.isUniqueUsernameAndEmail(uniqueUsername, uniqueEmail, function(actualError, actualResult) {
+            // Assert
+            assert.ok(actualResult === true);
+            assert.ok(_u.find.calledOnce);
+
+            assert.ok(connectionObject.query.calledOnce);
+            assert.ok(connectionObject.release.calledOnce);
+            assertionTests = true;
+        });
         assert.ok(assertionTests, 'Tests inside callback did not get run');
     }));
 });
-// *********** end getUserByUsernameAndEmail tests*********** //
+// *********** end isUniqueUsernameAndEmail tests*********** //
 
 // *********** start postUser tests *********** //
 describe('postUserIntoUserInfo', function() {
@@ -428,7 +449,7 @@ describe('getUsernameAndEmailPromise', function() {
 
         // Arrange
         dbSelectError = 'Expected Error';
-        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
+        sandbox.stub(unitUnderTest, 'isUniqueUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
 
         // Act
         var actual = unitUnderTest.getUsernameAndEmailPromise(username, email);
@@ -438,7 +459,7 @@ describe('getUsernameAndEmailPromise', function() {
             assert.ok(rejectedReason === dbSelectError, 'Expected error assertion \'' + dbSelectError + '\' does not match actual: \'' + rejectedReason + '\'');
         }).done(function() {
             assertionTests = true;
-            assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
+            assert.ok(unitUnderTest.isUniqueUsernameAndEmail.calledOnce);
             assert.ok(assertionTests, 'Tests inside callback did not get run');
             done();
         });
@@ -451,7 +472,7 @@ describe('getUsernameAndEmailPromise', function() {
         // Arrange
         dbSelectError = null;
         dbSelectResult = 'Fulfilled Promise';
-        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
+        sandbox.stub(unitUnderTest, 'isUniqueUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
 
         // Act
         var actual = unitUnderTest.getUsernameAndEmailPromise(username, email);
@@ -461,7 +482,7 @@ describe('getUsernameAndEmailPromise', function() {
             assert.ok(fulfilledPromise === dbSelectResult, 'Expected promise assertion \'' + dbSelectResult + '\' does not match actual: \'' + fulfilledPromise + '\'');
         }, function(rejectedReason) {/*NOT INVOKED*/}).done(function() {
             assertionTests = true;
-            assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
+            assert.ok(unitUnderTest.isUniqueUsernameAndEmail.calledOnce);
             assert.ok(assertionTests, 'Tests inside callback did not get run');
             done();
         });
@@ -655,7 +676,7 @@ describe('registerUser', function() {
         dbSelectError = new Error('Promise1 rejected');
         dbSelectResult = null;
 
-        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, null);
+        sandbox.stub(unitUnderTest, 'isUniqueUsernameAndEmail').callsArgWith(2, dbSelectError, null);
 
         // // Act
         unitUnderTest.registerUser({Username : 'inno', Email: 'inno@abc.com', Password: 'inno_secret'}, function(promise) {
@@ -668,20 +689,20 @@ describe('registerUser', function() {
         });
     }));
 
-    it('should reject the second promise - getUsernameAndEmailPromise', sinon.test(function(done) {
+    it('should reject the second promise - postUserIntoUserInfoPromise', sinon.test(function(done) {
         dbSelectError = null;
         dbSelectResult = 'Promise1 fulfilled';
         dbInsertUserInfoErr = new Error('Promise2 Rejected');
         dbInsertUserInfoRes = null;
 
-        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, null);
+        sandbox.stub(unitUnderTest, 'isUniqueUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
         sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
 
         // Act
         unitUnderTest.registerUser({Username : 'inno', Email: 'inno@abc.com', Password: 'inno_secret'}, function(promise) {
             promise.done(undefined, function(rejectedReason) {
                 assert.ok(rejectedReason === dbInsertUserInfoErr);
-                assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
+                assert.ok(unitUnderTest.isUniqueUsernameAndEmail.calledOnce);
                 assertionTests = true;
                 assert.ok(assertionTests, 'Assertions did not get run');
                 done();
@@ -697,7 +718,7 @@ describe('registerUser', function() {
         dbInsertUserAccErr  = new Error('Promise3 rejected');
         dbInsertUserAccRes  = null;
 
-        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, null);
+        sandbox.stub(unitUnderTest, 'isUniqueUsernameAndEmail').callsArgWith(2, dbSelectError, dbSelectResult);
         sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
         sandbox.stub(unitUnderTest, 'postUserIntoUserAccount').callsArgWith(1, dbInsertUserAccErr, dbInsertUserAccRes);
 
@@ -705,7 +726,7 @@ describe('registerUser', function() {
         unitUnderTest.registerUser({Username : 'inno', Email: 'inno@abc.com', Password: 'inno_secret'}, function(promise) {
             promise.done(undefined, function(rejectedReason) {
                 assert.ok(rejectedReason === dbInsertUserAccErr);
-                assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
+                assert.ok(unitUnderTest.isUniqueUsernameAndEmail.calledOnce);
                 assert.ok(unitUnderTest.postUserIntoUserInfo.calledOnce);
                 assertionTests = true;
                 assert.ok(assertionTests, 'Assertions did not get run');
@@ -722,7 +743,7 @@ describe('registerUser', function() {
         dbInsertUserAccErr  = null;
         dbInsertUserAccRes  = 'Promise3 fulfilled';
 
-        sandbox.stub(unitUnderTest, 'getUserByUsernameAndEmail').callsArgWith(2, dbSelectError, null);
+        sandbox.stub(unitUnderTest, 'isUniqueUsernameAndEmail').callsArgWith(2, dbSelectError, null);
         sandbox.stub(unitUnderTest, 'postUserIntoUserInfo').callsArgWith(1, dbInsertUserInfoErr, dbInsertUserInfoRes);
         sandbox.stub(unitUnderTest, 'postUserIntoUserAccount').callsArgWith(1, dbInsertUserAccErr, dbInsertUserAccRes);
 
@@ -730,11 +751,11 @@ describe('registerUser', function() {
         unitUnderTest.registerUser({Username : 'inno', Email: 'inno@abc.com', Password: 'inno_secret'}, function(promise) {
             promise.done(function(fulfilledValue) {
                 assert.ok(fulfilledValue === dbInsertUserAccRes);
-                assert.ok(unitUnderTest.getUserByUsernameAndEmail.calledOnce);
+                assert.ok(unitUnderTest.isUniqueUsernameAndEmail.calledOnce);
                 assert.ok(unitUnderTest.postUserIntoUserInfo.calledOnce);
                 assert.ok(unitUnderTest.postUserIntoUserAccount.calledOnce);
-                assert.ok(unitUnderTest.getUserByUsernameAndEmail
-                          .calledBefore(unitUnderTest.postUserIntoUserInfo), 'getUserByUserNameAndEmail should be called in sequence before postUserIntoUserInfo');
+                assert.ok(unitUnderTest.isUniqueUsernameAndEmail
+                          .calledBefore(unitUnderTest.postUserIntoUserInfo), 'isUniqueUsernameAndEmail should be called in sequence before postUserIntoUserInfo');
                 assert.ok(unitUnderTest.postUserIntoUserInfo
                           .calledBefore(unitUnderTest.postUserIntoUserAccount), 'postUserIntoUserInfo should be called in sequence before postUserIntoUserAccount');
                 assertionTests = true;
@@ -850,6 +871,267 @@ describe('getBookByISBN', function() {
         // assert
         assert.ok(assertionTests, 'Tests inside callback did not get run');
     }));
-
 });
 // *********** end registerUser tests *********** //
+
+// *********** start getMangaBooks tests *********** //
+
+describe('getMangaBooks', function() {
+    var assertionTests = null;
+
+    beforeEach(function() {
+        assertionTests = false;
+    });
+
+    it('should get connection error to the pool', sinon.test(function() {
+        var expectedError = new Error('Pool connection error');
+        var fakeConnection = { release : this.stub() };
+
+        var fakePool = {
+            getConnection : this.stub().callsArgWith(0, expectedError, fakeConnection)
+        };
+        this.stub(unitUnderTest, 'getPool').returns(fakePool);
+
+        unitUnderTest.getMangaBooks(function(actualError, result) {
+            assert.ok(fakeConnection.release.calledOnce, 'connection.release() did not get called');
+            assert.ok(actualError === expectedError, 'actualError ' + actualError + ' does not match expectedError ' + expectedError);
+            assertionTests = true;
+        });
+
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+
+    it('should get query error even though pool connection succeeded', sinon.test(function() {
+        var expectedError = new Error('Query error');
+        var fakeConnection = {
+            release : this.stub(),
+            query   : this.stub()
+                          .callsArgWith(1, expectedError, undefined)
+        };
+        var fakePool = {
+            getConnection : this.stub()
+                                .callsArgWith(0, undefined, fakeConnection)
+        };
+
+        this.stub(unitUnderTest, 'getPool').returns(fakePool);
+
+        unitUnderTest.getMangaBooks(function(actualError, result) {
+            assert.ok(fakeConnection.release.calledOnce, 'connection.release() did not get called');
+            assert.ok(actualError === expectedError, 'actualError ' + actualError + ' does not match expectedError ' + expectedError);
+            assertionTests = true;
+        });
+
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+
+    it('should get result - success case', sinon.test(function() {
+        var callbackResult = 'HELLO WORLD';
+        var expectedDbResult = { map : this.stub().returns(callbackResult) };
+        var fakeConnection = {
+            release : this.stub(),
+            query   : this.stub()
+                          .callsArgWith(1, undefined, expectedDbResult)
+        };
+        var fakePool = {
+            getConnection : this.stub()
+                                .callsArgWith(0, undefined, fakeConnection)
+        };
+
+        this.stub(unitUnderTest, 'getPool').returns(fakePool);
+
+        unitUnderTest.getMangaBooks(function(actualError, actualResult) {
+            assert.ok(fakeConnection.release.calledOnce, 'connection.release() did not get called');
+            assert.ok(actualError === undefined, 'actualError is ' + actualError + ', should be ' + undefined);
+            assert.ok(actualResult === callbackResult, 'actualResult is ' + actualResult + ', should be ' + callbackResult);
+            assert.ok(expectedDbResult.map.calledOnce, 'map function is not invoke against the expectedDbResult');
+            assertionTests = true;
+        });
+
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+});
+// *********** end getMangaBooks tests *********** //
+
+// *********** start getMarvelBooks tests *********** //
+describe('getMarvelBooks', function() {
+    var assertionTests = null;
+
+    beforeEach(function() {
+        assertionTests = false;
+    });
+
+    it('should get connection error to the pool', sinon.test(function() {
+        var expectedError   = new Error('Pool connection error');
+        var fakeConnection  = {
+            release : this.stub()
+        };
+        var fakePool        = { 
+            getConnection : this.stub().callsArgWith(0, expectedError, fakeConnection)
+        };
+        this.stub(unitUnderTest, 'getPool').returns(fakePool);
+
+        unitUnderTest.getMarvelBooks(function(actualError, result) {
+            assert.ok(fakeConnection.release.calledOnce, 'connection.release() did not get called');
+            assert.ok(actualError === expectedError, 'actualError ' + actualError + ' does not match expectedError ' + expectedError);
+            assertionTests = true;
+        });
+
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+
+    it('should get query error even though pool connection succeeded', sinon.test(function() {
+        var expectedError = 'FAILED';
+        var fakeConnection = {
+            release : this.stub(),
+            query   : this.stub()
+                          .callsArgWith(1, expectedError, undefined)
+        };
+        var fakePool = {
+            getConnection : this.stub()
+                                .callsArgWith(0, undefined, fakeConnection)
+        };
+
+        this.stub(unitUnderTest, 'getPool').returns(fakePool);
+
+        unitUnderTest.getMarvelBooks(function(actualError, result) {
+            assert.ok(fakeConnection.release.calledOnce, 'connection.release() did not get called');
+            assert.ok(actualError === expectedError, 'actualError ' + actualError + ' does not match expectedError ' + expectedError);
+            assertionTests = true;
+        });
+
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+
+    it('should get result - success case', sinon.test(function() {
+        var expectedDbResult = 'SUCCESS';
+        var fakeConnection = {
+            release : this.stub(),
+            query   : this.stub()
+                          .callsArgWith(1, undefined, expectedDbResult)
+        };
+        var fakePool = {
+            getConnection : this.stub()
+                                .callsArgWith(0, undefined, fakeConnection)
+        };
+
+        this.stub(unitUnderTest, 'getPool').returns(fakePool);
+        this.stub(unitUnderTest, 'generateBookJSON').returns(expectedDbResult);
+
+        unitUnderTest.getMarvelBooks(function(actualError, actualResult) {
+            assert.ok(fakeConnection.release.calledOnce, 'connection.release() did not get called');
+            assert.ok(actualError === undefined, 'actualError is ' + actualError + ', should be ' + undefined);
+            assert.ok(actualResult === expectedDbResult, 'actualResult is ' + actualResult + ', should be ' + expectedDbResult);
+            assertionTests = true;
+        });
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+});
+// *********** end getMangaBooks tests *********** //
+
+// *********** start getDCBooks tests *********** //
+describe('getDCBooks', function() {
+    var assertionTests = null;
+    beforeEach(function() {
+        assertionTests = false;
+    });
+
+    it('should get connection error to the pool', sinon.test(function() {
+        var expectedError   = new Error('Pool connection error');
+        var fakeConnection  = {
+            release : this.stub()
+        };
+        var fakePool        = { 
+            getConnection : this.stub().callsArgWith(0, expectedError, fakeConnection)
+        };
+        this.stub(unitUnderTest, 'getPool').returns(fakePool);
+
+        unitUnderTest.getDCBooks(function(actualError, result) {
+            assert.ok(fakeConnection.release.calledOnce, 'connection.release() did not get called');
+            assert.ok(actualError === expectedError, 'actualError ' + actualError + ' does not match expectedError ' + expectedError);
+            assertionTests = true;
+        });
+
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+
+    it('should get query error even though pool connection succeeded', sinon.test(function() {
+        var expectedError = 'FAILED';
+        var fakeConnection = {
+            release : this.stub(),
+            query   : this.stub()
+                          .callsArgWith(1, expectedError, undefined)
+        };
+        var fakePool = {
+            getConnection : this.stub()
+                                .callsArgWith(0, undefined, fakeConnection)
+        };
+
+        this.stub(unitUnderTest, 'getPool').returns(fakePool);
+
+        unitUnderTest.getDCBooks(function(actualError, result) {
+            assert.ok(fakeConnection.release.calledOnce, 'connection.release() did not get called');
+            assert.ok(actualError === expectedError, 'actualError ' + actualError + ' does not match expectedError ' + expectedError);
+            assertionTests = true;
+        });
+
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+
+    it('should get result - success case', sinon.test(function() {
+        var expectedDbResult = 'SUCCESS';
+        var fakeConnection = {
+            release : this.stub(),
+            query   : this.stub()
+                          .callsArgWith(1, undefined, expectedDbResult)
+        };
+        var fakePool = {
+            getConnection : this.stub()
+                                .callsArgWith(0, undefined, fakeConnection)
+        };
+
+        this.stub(unitUnderTest, 'getPool').returns(fakePool);
+        this.stub(unitUnderTest, 'generateBookJSON').returns(expectedDbResult);
+
+        unitUnderTest.getDCBooks(function(actualError, actualResult) {
+            assert.ok(fakeConnection.release.calledOnce, 'connection.release() did not get called');
+            assert.ok(actualError === undefined, 'actualError is ' + actualError + ', should be ' + undefined);
+            assert.ok(actualResult === expectedDbResult, 'actualResult is ' + actualResult + ', should be ' + expectedDbResult);
+            assertionTests = true;
+        });
+        assert.ok(assertionTests, 'Tests did not get run');
+    }));
+});
+// *********** end getDCBooks tests *********** //
+
+// *********** start generateBookJSON tests *********** //
+describe('generateBookJSON', function() {
+    it('should return expected properties', sinon.test(function() {
+        var testInput = [
+            {
+                ISBN : '1234',
+                Author : 'Inno',
+                Title : 'MyBook',
+                Category : 'Javascript'
+            },
+            {
+                ISBN : '5678',
+                Author : 'Kon',
+                Title : 'HerBook',
+                Category : 'Java'
+            }
+        ];
+
+        var res = unitUnderTest.generateBookJSON(testInput);
+
+        assert.ok(res[0].isbn === testInput[0].ISBN);
+        assert.ok(res[0].author === testInput[0].Author);
+        assert.ok(res[0].title === testInput[0].Title);
+        assert.ok(res[0].category === testInput[0].Category);
+
+        assert.ok(res[1].isbn === testInput[1].ISBN);
+        assert.ok(res[1].author === testInput[1].Author);
+        assert.ok(res[1].title === testInput[1].Title);
+        assert.ok(res[1].category === testInput[1].Category);
+    }));
+});
+// *********** end generateBookJSON tests *********** //

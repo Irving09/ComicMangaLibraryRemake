@@ -16,7 +16,7 @@ describe('books', function() {
 
 	});
 
-	it('should callback with an error', sinon.test(function() {
+	it('should return the expected error - fail case', sinon.test(function() {
 		var expectedError = new Error('clearDB error');
 		var fakeReq = { params : { isbn : 12345 } };
 		var fakeRes = { send : this.stub() };
@@ -29,7 +29,24 @@ describe('books', function() {
 		// Assert
 		assert.ok(clearDB.getBookByISBN.calledOnce);
 		assert.ok(fakeRes.send.calledOnce);
+		sinon.assert.calledWith(fakeRes.send, expectedError);
 	}));
 
+	it('should be able to return the expected result - success case', sinon.test(function() {
+		var expectedResult = 'SUCCESSFULL';
+		var fakeReq = { params : { isbn : 12345 } };
+		var fakeRes = { send : this.stub() };
+
+		// Arrange
+		this.stub(clearDB, 'getBookByISBN').callsArgWith(1, null, expectedResult);
+
+		// Act
+		unitUnderTest.getBookByISBN(fakeReq, fakeRes);
+
+		// Assert
+		assert.ok(clearDB.getBookByISBN.calledOnce);
+		assert.ok(fakeRes.send.calledOnce);
+		sinon.assert.calledWith(fakeRes.send, expectedResult);
+	}));
 	
 });
