@@ -261,37 +261,26 @@ exports.getAuthor = function(authorName, callback) {
 			connection.release();
 			return callback(connectionError, undefined);
 		}
-		//req.headers.author
+		
 		var queryString = 'select ISBN, Author, Title, Category from bookinfo where Author like ?';
 		connection.query(queryString, '%' + authorName + '%', function(err, dbResult) {
 			if (err) {
 				return callback(err, undefined);
 			}
 
-			//test.indexOf(req.headers.author.toLowerCase())
+			var result = dbResult.reduce(function(currentValue, dbRow, index) {
+				if (dbRow.Author.toLowerCase().indexOf(authorName.toLowerCase()) > -1) {
+					currentValue.push({
+						ISBN : dbRow.ISBN,
+						Author : dbRow.Author,
+						Title : dbRow.Title,
+						Category : dbRow.Category,
+					});
+				}
+				return currentValue;
+			}, []);
 
-			// var result = dbResult.reduce(function(currentValue) {
-			// 	console.log('currentValue:', currentValue);
-			// 	return currentValue;
-			// }, []);
-
-			// function(currentResult, dbRow) {
-				// if (dbRow.Author.toLowerCase().indexOf(authorName.toLowerCase()) > -1) {
-				// 	currentResult.push({
-				// 		ISBN : dbRow.ISBN,
-				// 		Author : dbRow.Author,
-				// 		Title : dbRow.Title,
-				// 		Category : dbRow.Category,
-				// 	});
-				// 	return currentResult;
-				// }
-				
-			// }, []
-			// callback(undefined, result);
-			// var isbn = rows[value].ISBN;
-			// var author = rows[value].Author;
-			// var title = rows[value].Title;
-			// var category = rows[value].Category;
+			callback(undefined, dbResult);
 		});
 	});
 };

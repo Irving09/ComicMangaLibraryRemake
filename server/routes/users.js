@@ -1,13 +1,10 @@
-var express = require('express');
-var router = express.Router();
+'use strict';
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+var express 	= require('express');
+var userHandler = require('./routeHandlers/userHandler.js');
+var router 		= express.Router();
 
-router.get('/:username', function(request, response, next){
-	response.send('user ' + request.params.username);
-});
+router.get('/', userHandler.usersHome);
+router.get('/:username', userHandler.getAuthor);
 
 module.exports = router;
