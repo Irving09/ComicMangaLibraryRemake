@@ -7,10 +7,37 @@ exports.booksHome =  function(req, res, next) {
 };
 
 exports.getBookByISBN = function(req, res) {
-	clearDB.getBookByISBN(req.params.isbn, function(err, result) {
-		if (err) {
-			return res.send(err);
+	clearDB.getBookByISBN(req.params.isbn, function(queryError, queryResult) {
+		if (queryError) {
+			return res.send(queryError);
 		}
-		return res.send(result);
+		return res.send(queryResult);
 	});
+};
+
+exports.getMangaBooks = function(req, res) {
+	clearDB.getMangaBooks(function(queryError, queryResult) {
+		if (queryError) {
+			return res.send(queryError);
+		}
+		return res.send(queryResult);
+	});	
+};
+
+exports.getMarvelBooks = function(req, res) {
+	clearDB.getMarvelBooks(function(queryError, queryResult) {
+		if (queryError) {
+			return res.send(queryError);
+		}
+		return res.send(queryResult);
+	});	
+};
+
+exports.getDCBooks = function(req, res) {
+	clearDB.getDCBooks(function(queryError, queryResult) {
+		if (queryError) {
+			return res.send(queryError);
+		}
+		return res.send(queryResult);
+	});	
 };
