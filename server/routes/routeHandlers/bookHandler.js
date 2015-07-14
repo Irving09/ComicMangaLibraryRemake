@@ -7,6 +7,7 @@ exports.booksHome =  function(req, res, next) {
 };
 
 exports.getBookByISBN = function(req, res) {
+	// console.log('=========getBookByISBN is here=========');
 	clearDB.getBookByISBN(req.params.isbn, function(queryError, queryResult) {
 		if (queryError) {
 			return res.send(queryError);
@@ -16,7 +17,10 @@ exports.getBookByISBN = function(req, res) {
 };
 
 exports.getMangaBooks = function(req, res) {
+	// console.log('=========getMangaBooks is here=========');
 	clearDB.getMangaBooks(function(queryError, queryResult) {
+		console.log('queryError:', queryError);
+		console.log('queryResult:', queryResult);
 		if (queryError) {
 			return res.send(queryError);
 		}

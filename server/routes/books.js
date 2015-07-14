@@ -7,6 +7,7 @@ var router 		= express.Router();
 
 /* GET users listing. */
 router.get('/', bookHandler.booksHome);
+router.get('/manga', bookHandler.getMangaBooks);
 router.get('/:isbn', bookHandler.getBookByISBN);
 
 module.exports = router;
