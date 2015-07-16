@@ -4,7 +4,8 @@
   "description": "ComicMangaLibraryRemake remake",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "http-server ./app/ -a localhost -p 8080 -c-1"
   },
   "repository": {
     "type": "git",

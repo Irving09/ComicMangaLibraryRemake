@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html ng-app='app'>
 <head>
 	<title>Comic Manga Library Remake</title>
 </head>
 <body>
+  	<div ng-view></div>
+
 	<script type='text/javascript' src='./bower_components/angular/angular.min.js'></script>
+	<script type='text/javascript' src='./bower_components/angular-route/angular-route.min.js'></script>
 	<script type='text/javascript' src='./app.js'></script>
+	<script type='text/javascript' src='./dashboard/dashboardModule.js'></script>
+	<script type='text/javascript' src='./books/booksModule.js'></script>
 </body>
 </html>
