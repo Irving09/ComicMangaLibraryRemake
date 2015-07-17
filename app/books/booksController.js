@@ -2,12 +2,15 @@
 	'use strict';
 
 	angular
-		.module('app.dashboard')
+		.module('app.books')
 		.controller('BooksController', BooksController);
 
-	function BooksController() {
+	BooksController.$inject = ['BooksService'];
+
+	function BooksController(BooksService) {
 		var booksCtrl = this;
-		console.log('Books controller loaded');
 		booksCtrl.name = 'Books Controller';
+
+		booksCtrl.testBooksService = BooksService.getBooks;
 	}
 })();

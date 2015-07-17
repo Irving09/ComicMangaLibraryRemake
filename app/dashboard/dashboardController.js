@@ -7,7 +7,6 @@
 
 	function DashboardController() {
 		var dashboardCtrl = this;
-		console.log('Dashboard controller loaded');
 		dashboardCtrl.name = 'Dashboard Controller';
 	}
 })();

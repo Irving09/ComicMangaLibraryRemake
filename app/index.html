@@ -2,8 +2,9 @@
 <html ng-app='app'>
 <head>
 	<title>Comic Manga Library Remake</title>
+	<link rel='stylesheet' type='text/css' href='./bower_components/bootstrap/dist/css/bootstrap.css'>
 </head>
-<body>
+<body class='container'>
   	<div ng-view></div>
 
 	<script type='text/javascript' src='./bower_components/angular/angular.min.js'></script>
@@ -12,6 +13,7 @@
 	<script type='text/javascript' src='./dashboard/dashboardModule.js'></script>
 	<script type='text/javascript' src='./dashboard/dashboardController.js'></script>
 	<script type='text/javascript' src='./books/booksModule.js'></script>
+	<script type='text/javascript' src='./books/booksService.js'></script>
 	<script type='text/javascript' src='./books/booksController.js'></script>
 </body>
 </html>
