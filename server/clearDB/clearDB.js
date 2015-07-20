@@ -165,7 +165,7 @@ exports.getBookByISBN = function(isbn, callback) {
 		}
 		
 		// TODO
-		connection.query('select ISBN, Title, Author, Category from bookinfo', function(queryError, dbResult) {
+		connection.query('select ISBN, Title, Author, Category from bookinfo where ISBN=\'' + isbn + '\'', function(queryError, dbResult) {
 			connection.release();
 			if (queryError) {
 				return callback(queryError, null);

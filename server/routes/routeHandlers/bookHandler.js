@@ -4,11 +4,12 @@ var clearDB	= require('../../clearDB/clearDB.js');
 
 exports.booksHome =  function(req, res, next) {
 	res.send('respond with a resource');
+	return res.end();
 };
 
 exports.getBookByISBN = function(req, res) {
 	// console.log('=========getBookByISBN is here=========');
-	clearDB.getBookByISBN(req.params.isbn, function(queryError, queryResult) {
+	return clearDB.getBookByISBN(req.params.isbn, function(queryError, queryResult) {
 		if (queryError) {
 			return res.send(queryError);
 		}
@@ -18,9 +19,7 @@ exports.getBookByISBN = function(req, res) {
 
 exports.getMangaBooks = function(req, res) {
 	// console.log('=========getMangaBooks is here=========');
-	clearDB.getMangaBooks(function(queryError, queryResult) {
-		console.log('queryError:', queryError);
-		console.log('queryResult:', queryResult);
+	return clearDB.getMangaBooks(function(queryError, queryResult) {
 		if (queryError) {
 			return res.send(queryError);
 		}
@@ -29,7 +28,7 @@ exports.getMangaBooks = function(req, res) {
 };
 
 exports.getMarvelBooks = function(req, res) {
-	clearDB.getMarvelBooks(function(queryError, queryResult) {
+	return clearDB.getMarvelBooks(function(queryError, queryResult) {
 		if (queryError) {
 			return res.send(queryError);
 		}
@@ -38,7 +37,7 @@ exports.getMarvelBooks = function(req, res) {
 };
 
 exports.getDCBooks = function(req, res) {
-	clearDB.getDCBooks(function(queryError, queryResult) {
+	return clearDB.getDCBooks(function(queryError, queryResult) {
 		if (queryError) {
 			return res.send(queryError);
 		}
