@@ -7,10 +7,59 @@ var _u              = require('lodash');
 var clearDB			= require('../clearDB/clearDB.js');
 var unitUnderTest   = require('../routes/routeHandlers/bookHandler.js');
 
+describe('booksHome', function() {
+    var req, res, sandbox;
+    
+    before(function() {
+        sandbox = sinon.sandbox.create();
+    });
+
+    beforeEach(function() {
+        req = {
+            query : {
+                isbn : sinon.stub() 
+            }
+        };
+
+        res = {
+            send : function(message) {
+                return message;
+            }
+        };
+    });
+
+    afterEach(function() {
+        sandbox.restore();
+    });
+
+    it('should NOT invoke getBookByISBN when isbn query is undefined', sinon.test(function() {
+        // Arrange
+        this.stub(unitUnderTest, 'getBookByISBN');
+        req.query.isbn = undefined;
+        
+        // Act
+        var result = unitUnderTest.booksHome(req, res);
+
+        // Assert
+        assert.ok(unitUnderTest.getBookByISBN.notCalled);
+    }));
+
+    it('should invoke getBookByISBN when isbn query exists', sinon.test(function() {
+        // Arrange
+        this.stub(unitUnderTest, 'getBookByISBN');
+        
+        // Act
+        var result = unitUnderTest.booksHome(req, res);
+
+        // Assert
+        assert.ok(unitUnderTest.getBookByISBN.calledOnce);
+    }));    
+});
+
 describe('getBookByISBN', function() {
 	it('should return the expected error in the clearDB callback - fail case', sinon.test(function() {
 		var expectedError = new Error('clearDB error');
-		var fakeReq = { params : { isbn : 12345 } };
+		var fakeReq = { query : { isbn : 12345 } };
 		var fakeRes = { send : this.stub() };
 		// Arrange
 		this.stub(clearDB, 'getBookByISBN').callsArgWith(1, expectedError, null);
@@ -26,7 +75,7 @@ describe('getBookByISBN', function() {
 
 	it('should be able to return the expected result - success case', sinon.test(function() {
 		var expectedResult = 'SUCCESSFULL';
-		var fakeReq = { params : { isbn : 12345 } };
+		var fakeReq = { query : { isbn : 12345 } };
 		var fakeRes = { send : this.stub() };
 
 		// Arrange
@@ -48,12 +97,15 @@ describe('getMangaBooks', function() {
     beforeEach(function() {
         sandbox = sinon.sandbox.create();
         fakeRequest = {
-            params : {
+            query : {
                 isbn : sandbox.stub()
             }
         };
 
         fakeResponse = {
+            status : function(code) {
+                return this;
+            },
             send : sandbox.stub()
         };
     });
@@ -97,12 +149,15 @@ describe('getMarvelBooks', function() {
     beforeEach(function() {
         sandbox = sinon.sandbox.create();
         fakeRequest = {
-            params : {
+            query : {
                 isbn : sandbox.stub()
             }
         };
 
         fakeResponse = {
+            status : function(code) {
+                return this;
+            },
             send : sandbox.stub()
         };
     });
@@ -146,12 +201,15 @@ describe('getDCBooks', function() {
     beforeEach(function() {
         sandbox = sinon.sandbox.create();
         fakeRequest = {
-            params : {
+            query : {
                 isbn : sandbox.stub()
             }
         };
 
         fakeResponse = {
+            status : function(code) {
+                return this;
+            },
             send : sandbox.stub()
         };
     });

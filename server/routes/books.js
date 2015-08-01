@@ -5,17 +5,24 @@ var clearDB		= require('../clearDB/clearDB.js');
 var bookHandler	= require('./routeHandlers/bookHandler.js');
 var router 		= express.Router();
 
-/* GET users listing. */
-router.get('/:isbn', function(req, res) {
-	console.log('=========getBookByISBN is here=========');
-	return clearDB.getBookByISBN(req.params.isbn, function(queryError, queryResult) {
-		if (queryError) {
-			return res.send(queryError);
-		}
-		return res.send(queryResult);
-	});
-});
-router.get('/', bookHandler.booksHome);
-router.get('/manga', bookHandler.getMangaBooks);
+router
+	.route('/')
+	.get(bookHandler.booksHome);
+
+// router
+// 	.route('/:isbn')
+// 	.get(bookHandler.getBookByISBN); // Weird
+
+router
+	.route('/manga')
+	.get(bookHandler.getMangaBooks);
+
+router
+	.route('/marvel')
+	.get(bookHandler.getMarvelBooks);
+
+router
+	.route('/dc')
+	.get(bookHandler.getDCBooks);
 
 module.exports = router;
