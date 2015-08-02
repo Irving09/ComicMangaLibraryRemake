@@ -6,6 +6,8 @@ var mysql           = require('mysql');
 var _u              = require('lodash');
 var unitUnderTest   = require('../clearDB/clearDB.js');
 
+
+
 // *********** start getUserByUsernameAndPassword tests *********** //
 describe('getUserByUsernameAndPassword', function() {
     var poolConnectionError = null,
@@ -875,7 +877,6 @@ describe('getBookByISBN', function() {
 // *********** end registerUser tests *********** //
 
 // *********** start getMangaBooks tests *********** //
-
 describe('getMangaBooks', function() {
     var assertionTests = null;
 

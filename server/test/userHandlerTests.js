@@ -14,8 +14,13 @@ describe('users', function() {
 	});
 
 	beforeEach(function() {
-		fakeRequest = { params : { username : sandbox.stub() } };
-		fakeResponse = { send : sandbox.stub() };
+		fakeRequest = { query : { username : sandbox.stub() } };
+		fakeResponse = {
+			status : function(code) {
+                return this;
+            },
+			send : sandbox.stub()
+		};
 	});
 
 	afterEach(function() {

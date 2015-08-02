@@ -7,9 +7,9 @@ exports.usersHome =  function(req, res, next) {
 };
 
 exports.getAuthor = function(req, res) {
-	clearDB.getAuthor(req.params.username, function(err, result) {
+	clearDB.getAuthor(req.query.username, function(err, result) {
 		if (err) {
-			return res.send(err);
+			return res.status(400).send(err);
 		}
 		return res.send(result);
 	});

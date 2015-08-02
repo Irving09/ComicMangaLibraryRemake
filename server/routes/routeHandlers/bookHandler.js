@@ -3,7 +3,6 @@
 var clearDB	= require('../../clearDB/clearDB.js');
 
 exports.booksHome =  function(req, res, next) {
-	console.log('req.query.isbn:', req.query.isbn);
 	if (typeof req.query.isbn != 'undefined') {
 		var test = exports.getBookByISBN(req, res);
 		return test;
@@ -13,7 +12,6 @@ exports.booksHome =  function(req, res, next) {
 
 exports.getBookByISBN = function(req, res) {
 	return clearDB.getBookByISBN(req.query.isbn, function(queryError, queryResult) {
-		console.log('queryResult:', queryResult);
 		if (queryError) {
 			return res.send(queryError);
 		}
@@ -23,7 +21,6 @@ exports.getBookByISBN = function(req, res) {
 
 exports.getMangaBooks = function(req, res) {
 	return clearDB.getMangaBooks(function(queryError, queryResult) {
-		console.log('queryResult:', queryResult);
 		if (queryError) {
 			return res.status(400).send(queryError);
 		}

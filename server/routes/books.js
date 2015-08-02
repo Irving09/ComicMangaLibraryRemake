@@ -9,10 +9,6 @@ router
 	.route('/')
 	.get(bookHandler.booksHome);
 
-// router
-// 	.route('/:isbn')
-// 	.get(bookHandler.getBookByISBN); // Weird
-
 router
 	.route('/manga')
 	.get(bookHandler.getMangaBooks);
