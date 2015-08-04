@@ -4,8 +4,7 @@ var clearDB	= require('../../clearDB/clearDB.js');
 
 exports.booksHome =  function(req, res, next) {
 	if (typeof req.query.isbn != 'undefined') {
-		var test = exports.getBookByISBN(req, res);
-		return test;
+		return exports.getBookByISBN(req, res);
 	}
 	return res.send('booksHome invoked');
 };

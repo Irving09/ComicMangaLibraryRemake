@@ -6,9 +6,6 @@ var mysql           = require('mysql');
 var _u              = require('lodash');
 var unitUnderTest   = require('../clearDB/clearDB.js');
 
-
-
-// *********** start getUserByUsernameAndPassword tests *********** //
 describe('getUserByUsernameAndPassword', function() {
     var poolConnectionError = null,
         assertionTests      = false,
@@ -95,9 +92,7 @@ describe('getUserByUsernameAndPassword', function() {
         assert.ok(assertionTests, 'Tests inside callback did not get run');
     }));
 });
-// *********** end getUserByUsernameAndPassword tests*********** //
 
-// *********** start isUniqueUsernameAndEmail tests *********** //
 describe('isUniqueUsernameAndEmail', function() {
     var assertionTests      = false,
         connectionObject    = null,
@@ -205,9 +200,7 @@ describe('isUniqueUsernameAndEmail', function() {
         assert.ok(assertionTests, 'Tests inside callback did not get run');
     }));
 });
-// *********** end isUniqueUsernameAndEmail tests*********** //
 
-// *********** start postUser tests *********** //
 describe('postUserIntoUserInfo', function() {
     var assertionTests      = false,
         connectionObject    = null,
@@ -307,9 +300,7 @@ describe('postUserIntoUserInfo', function() {
         assert.ok(assertionTests, 'Tests inside callback did not get run');
     }));
 });
-// *********** end postUser tests *********** //
 
-// *********** start postUserIntoUserAccount tests *********** //
 describe('postUserIntoUserAccount', function() {
     var assertionTests      = false,
         connectionObject    = null,
@@ -414,9 +405,7 @@ describe('postUserIntoUserAccount', function() {
         assert.ok(assertionTests, 'Tests inside callback did not get run');
     }));
 });
-// *********** end postUserIntoUserAccount tests *********** //
 
-// *********** start getUsernameAndEmailPromise tests *********** //
 describe('getUsernameAndEmailPromise', function() {
     var assertionTests      = false,
         connectionObject    = null,
@@ -490,9 +479,7 @@ describe('getUsernameAndEmailPromise', function() {
         });
     }));
 });
-// *********** end getUsernameAndEmailPromise tests *********** //
 
-// *********** start postUserIntoUserInfoPromise tests *********** //
 describe('postUserIntoUserInfoPromise', function() {
     var assertionTests      = false,
         connectionObject    = null,
@@ -560,9 +547,7 @@ describe('postUserIntoUserInfoPromise', function() {
         });
     }));
 });
-// *********** end postUserIntoUserInfoPromise tests *********** //
 
-// *********** start postUserIntoUserAccountPromise tests *********** //
 describe('postUserIntoUserAccountPromise', function() {
     var assertionTests      = false,
         connectionObject    = null,
@@ -630,9 +615,7 @@ describe('postUserIntoUserAccountPromise', function() {
         });
     }));
 });
-// *********** end postUserIntoUserAccountPromise tests *********** //
 
-// *********** start registerUser tests *********** //
 describe('registerUser', function() {
     var assertionTests      = false,
         connectionObject    = null,
@@ -767,9 +750,7 @@ describe('registerUser', function() {
         });
     }));    
 });
-// *********** end registerUser tests *********** //
 
-// *********** start registerUser tests *********** //
 describe('getBookByISBN', function() {
     var poolConnectionError = null,
         assertionTests      = false,
@@ -874,9 +855,7 @@ describe('getBookByISBN', function() {
         assert.ok(assertionTests, 'Tests inside callback did not get run');
     }));
 });
-// *********** end registerUser tests *********** //
 
-// *********** start getMangaBooks tests *********** //
 describe('getMangaBooks', function() {
     var assertionTests = null;
 
@@ -951,9 +930,7 @@ describe('getMangaBooks', function() {
         assert.ok(assertionTests, 'Tests did not get run');
     }));
 });
-// *********** end getMangaBooks tests *********** //
 
-// *********** start getMarvelBooks tests *********** //
 describe('getMarvelBooks', function() {
     var assertionTests = null;
 
@@ -1027,9 +1004,7 @@ describe('getMarvelBooks', function() {
         assert.ok(assertionTests, 'Tests did not get run');
     }));
 });
-// *********** end getMangaBooks tests *********** //
 
-// *********** start getDCBooks tests *********** //
 describe('getDCBooks', function() {
     var assertionTests = null;
     beforeEach(function() {
@@ -1102,9 +1077,7 @@ describe('getDCBooks', function() {
         assert.ok(assertionTests, 'Tests did not get run');
     }));
 });
-// *********** end getDCBooks tests *********** //
 
-// *********** start generateBookJSON tests *********** //
 describe('generateBookJSON', function() {
     it('should return expected properties', sinon.test(function() {
         var testInput = [
@@ -1135,10 +1108,8 @@ describe('generateBookJSON', function() {
         assert.ok(res[1].category === testInput[1].Category);
     }));
 });
-// *********** end generateBookJSON tests *********** //
 
-// *********** start getAuthor tests *********** //
-describe('getAuthor', function() {
+describe('getUserByUsername', function() {
     var assertionTests;
     var fakeConnection;
     var sandbox;
@@ -1170,7 +1141,7 @@ describe('getAuthor', function() {
         var expectedError = 'Expected Error';
         fakePool.getConnection.callsArgWith(0, expectedError, fakeConnection);
 
-        unitUnderTest.getAuthor(authorName, function(actualError, actualResult) {
+        unitUnderTest.getUserByUsername(authorName, function(actualError, actualResult) {
             assert.ok(actualError === expectedError);
             assert.ok(actualResult === undefined);
             assert.ok(fakeConnection.release.calledOnce);
@@ -1186,7 +1157,7 @@ describe('getAuthor', function() {
         fakePool.getConnection.callsArgWith(0, undefined, fakeConnection);
         fakeConnection.query.callsArgWith(2, expectedError, undefined);
 
-        unitUnderTest.getAuthor(authorName, function(actualError, actualResult) {
+        unitUnderTest.getUserByUsername(authorName, function(actualError, actualResult) {
             assert.ok(actualError === expectedError);
             assertionTests = true;
         });
@@ -1219,7 +1190,7 @@ describe('getAuthor', function() {
         fakePool.getConnection.callsArgWith(0, undefined, fakeConnection);
         fakeConnection.query.callsArgWith(2, undefined, expectedDbResult);
 
-        unitUnderTest.getAuthor(authorName, function(actualError, actualResult) {
+        unitUnderTest.getUserByUsername(authorName, function(actualError, actualResult) {
             assert.ok(actualResult[0].Author === expectedDbResult[0].Author);
             assert.ok(actualResult[0].ISBN === expectedDbResult[0].ISBN);
             assert.ok(actualResult[0].Title === expectedDbResult[0].Title);
@@ -1235,4 +1206,3 @@ describe('getAuthor', function() {
         assert.ok(assertionTests, 'tests in the callback did not get run');
     }));
 });
-// *********** end getAuthor tests *********** //

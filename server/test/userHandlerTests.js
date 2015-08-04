@@ -29,12 +29,12 @@ describe('users', function() {
 	it('should return the expected error - fail case', sinon.test(function() {
 		var expectedError = new Error('clearDB error');
 
-		this.stub(clearDB, 'getAuthor').callsArgWith(1, expectedError, undefined);
+		this.stub(clearDB, 'getUserByUsername').callsArgWith(1, expectedError, undefined);
 
-		unitUnderTest.getAuthor(fakeRequest, fakeResponse);
+		unitUnderTest.getUserByUsername(fakeRequest, fakeResponse);
 
 		// Assert
-		assert.ok(clearDB.getAuthor.calledOnce);
+		assert.ok(clearDB.getUserByUsername.calledOnce);
 		assert.ok(fakeResponse.send.calledOnce);
 		sinon.assert.calledWith(fakeResponse.send, expectedError);
 	}));
@@ -42,12 +42,12 @@ describe('users', function() {
 	it('should be able to return the expected result - success case', sinon.test(function() {
 		var expectedResult = 'SUCCESS';
 
-		this.stub(clearDB, 'getAuthor').callsArgWith(1, undefined, expectedResult);
+		this.stub(clearDB, 'getUserByUsername').callsArgWith(1, undefined, expectedResult);
 
-		unitUnderTest.getAuthor(fakeRequest, fakeResponse);
+		unitUnderTest.getUserByUsername(fakeRequest, fakeResponse);
 
 		// Assert
-		assert.ok(clearDB.getAuthor.calledOnce);
+		assert.ok(clearDB.getUserByUsername.calledOnce);
 		assert.ok(fakeResponse.send.calledOnce);
 		sinon.assert.calledWith(fakeResponse.send, expectedResult);
 	}));

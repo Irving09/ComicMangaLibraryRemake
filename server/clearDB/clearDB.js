@@ -255,7 +255,7 @@ exports.generateBookJSON = function(dbResult) {
 	});
 };
 
-exports.getAuthor = function(authorName, callback) {
+exports.getUserByUsername = function(authorName, callback) {
 	exports.getPool().getConnection(function(connectionError, connection) {
 		if (connectionError) {
 			connection.release();

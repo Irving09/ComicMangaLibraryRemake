@@ -7,8 +7,6 @@ var clearDB			= require('../clearDB/clearDB.js');
 var bookHandler		= require('../routes/routeHandlers/bookHandler.js');
 var unitUnderTest 	= require('../routes/books.js');
 
-
-// TODO Not yet implemented
 describe('router.books', function() {
 	var sandbox, expectedMessage, expectedError;
 
@@ -44,7 +42,7 @@ describe('router.books', function() {
 				assert.ok(res.text === expectedMessage);
 				done();
 			});
-	}));	
+	}));
 
 	it('should call the correct routeHandler for bookHandler.getMangaBooks - success case', sinon.test(function(done) {
 		this.stub(clearDB, 'getMangaBooks').callsArgWith(0, undefined, expectedMessage);
