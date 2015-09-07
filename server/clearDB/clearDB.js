@@ -2,8 +2,8 @@
 
 var _u 		= require('lodash');
 var	mysql 	= require('mysql');
-// var config	= require('./dbConfig');
-var config	= require('../../../localDBConfigs/dbConfig');
+var config	= require('./dbConfig');
+// var config	= require('../../../localDBConfigs/dbConfig');
 var Q 		= require('q');
 
 var _pool   = mysql.createPool(config);
